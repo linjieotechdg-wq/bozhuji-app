@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>波珠机</title>
+<style>
+/* ════════════════════════════════════════
+   全局 & 底部导航
+════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#4a2080;}
+#root{
+  width:100%;height:100vh;max-width:420px;margin:0 auto;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+
+/* ── 主Tab容器 ── */
+#tab-views{
+  flex:1;min-height:0;
+  display:flex;overflow:hidden;position:relative;
+}
+.tab-view{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+/* 默认三个tab的位置 */
+.tab-view[data-tab="game"]   { transform:translateX(-100%); }
+.tab-view[data-tab="shop"]   { transform:translateX(100%); }
+.tab-view[data-tab="profile"]{ transform:translateX(200%); }
+.tab-view.active              { transform:translateX(0) !important; }
+
+/* ── 底部导航 ── */
+#bottom-nav{
+  height:54px;flex-shrink:0;
+  background:linear-gradient(180deg,#2d0a5c,#1a0535);
+  border-top:2px solid rgba(255,200,80,0.3);
+  display:flex;z-index:50;
+}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:2px;cursor:pointer;color:rgba(255,255,255,0.45);
+  font-size:10px;font-weight:600;
+  transition:all 0.15s;position:relative;
+}
+.bn-item .bni-ico{font-size:22px;line-height:1;}
+.bn-item.active{color:#ffe840;text-shadow:0 0 8px rgba(255,232,64,0.5);}
+.bn-dot{
+  position:absolute;top:6px;right:calc(50% - 18px);
+  width:7px;height:7px;border-radius:50%;
+  background:#ff3b30;border:1.5px solid #fff;
+  display:none;
+}
+.bn-dot.show{display:block;}
+
+/* ════════════════════════════════════════
+   游戏Tab 样式
+════════════════════════════════════════ */
+#game-view{
+  font-family:'PingFang SC','Helvetica Neue',sans-serif;
+  background:linear-gradient(180deg,#6a1fa0 0%,#3d0f6e 100%);
+}
+#topbar{display:flex;align-items:center;gap:6px;padding:5px 12px 3px;flex-shrink:0;}
+.tbadge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,220,100,0.6);border-radius:24px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.tbi{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;}
+.tbi-g{background:#f5c400;color:#7a3c00;}
+.tbi-b{background:radial-gradient(circle at 35% 30%,#60d8ff,#1090cc);}
+.tbadge span{font-size:14px;font-weight:800;color:#fff;}
+#infobar{background:rgba(255,255,255,0.1);border-radius:12px;margin:0 8px 2px;padding:4px 8px;border:1px solid rgba(255,255,255,0.15);display:flex;justify-content:space-around;flex-shrink:0;}
+.ist{font-size:10px;color:rgba(255,255,255,0.75);text-align:center;}
+.ist b{font-size:12px;color:#ffe840;display:inline;margin-left:2px;font-weight:800;}
+#multbar{display:flex;align-items:center;justify-content:center;padding:1px 12px 2px;flex-shrink:0;}
+#mbox{display:flex;gap:4px;background:rgba(0,0,0,0.3);border-radius:14px;padding:5px 10px;border:2px solid rgba(255,200,80,0.5);box-shadow:0 2px 10px rgba(0,0,0,0.3);}
+.ms{width:34px;height:36px;background:linear-gradient(180deg,#ffd860,#f5a800);border:2px solid #c87800;border-radius:10px;box-shadow:0 3px 0 #a06000,0 1px 4px rgba(0,0,0,0.2);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#7a3c00;position:relative;transition:all 0.15s;}
+.ms .dd{width:6px;height:6px;border-radius:50%;background:#c07800;position:absolute;top:3px;}
+.ms.spin{background:#ff8800;color:#fff;border-color:#ff5500;}
+.ms.active{background:#ee1100;border-color:#ff6666;color:#fff;box-shadow:0 0 16px rgba(255,60,60,0.9);transform:scale(1.13);}
+.ms.active .dd{background:#ffaaaa;}
+#machine-row{flex:1;min-height:0;display:flex;padding:0 8px;gap:0;}
+#lgutter{width:16px;flex-shrink:0;background:linear-gradient(180deg,#ffd860,#d4900a);border-radius:14px 0 0 14px;border:3px solid #e8a010;border-right:none;box-shadow:-2px 0 6px rgba(200,120,0,0.3);}
+#cwrap{flex:1;position:relative;background:linear-gradient(180deg,#fff9e0 0%,#ffee90 100%);border-top:3px solid #e8a010;border-bottom:3px solid #e8a010;overflow:hidden;}
+canvas{display:block;width:100%;height:100%;}
+#rtube-col{width:36px;flex-shrink:0;display:flex;flex-direction:column;position:relative;}
+#vtube{flex:1;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(180deg,#ffd860,#f5c840,#ffd860);border-radius:0 14px 14px 0;border:3px solid #e8a010;border-left:none;}
+#vtube-track{width:18px;height:100%;border-radius:9px;border:2px solid #a06000;background:linear-gradient(90deg,#b87000 0%,#f5e090 20%,#fff8d0 50%,#f5e090 80%,#b87000 100%);position:relative;overflow:hidden;box-shadow:0 0 8px rgba(200,140,0,0.5);}
+#vtube-fill{position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(to top,#ff2200,#ff8800,#ffee00);transition:height 0.03s linear;opacity:0.8;border-radius:7px;}
+#vtube-shine{position:absolute;top:4px;bottom:4px;left:3px;width:4px;border-radius:2px;background:linear-gradient(180deg,rgba(255,255,220,0.8),rgba(255,255,220,0.1));}
+#rbtm{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:4px 0 8px;background:linear-gradient(180deg,#ffd860,#e8a010);border-radius:0 0 14px 0;border:3px solid #e8a010;border-top:none;border-left:none;}
+#pval{font-size:8px;color:#7a3c00;font-weight:700;margin-bottom:3px;}
+#firebtn{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe880,#ff9800);border:2.5px solid #e07000;color:#7a3c00;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;box-shadow:0 4px 0 #a05000,0 0 12px rgba(255,150,0,0.4);transition:all 0.08s;}
+#firebtn.pressing{transform:scale(0.88) translateY(2px);box-shadow:0 1px 0 #8b5e00;background:radial-gradient(circle at 35% 35%,#ff8800,#cc3300);}
+#firebtn.off{opacity:0.3;pointer-events:none;}
+#slotsrow{display:flex;margin:0 8px;margin-left:calc(8px + 14px);margin-right:calc(8px + 36px);height:20px;background:rgba(100,50,0,0.18);border:2px solid #c07800;border-top:none;border-radius:0 0 8px 8px;}
+.slot{flex:1;text-align:center;font-size:9px;font-weight:700;color:#a06020;line-height:20px;border-right:1px solid rgba(180,100,0,0.3);}
+.slot:last-child{border-right:none;font-size:11px;}
+.slot.lit{animation:slotflash 0.35s ease-in-out infinite alternate;}
+@keyframes slotflash{0%{background:#cc0000;color:#fff;}100%{background:#ff2200;color:#ffe8e8;}}
+.slot.wf{background:#ffee00!important;color:#cc0000!important;animation:none!important;}
+#overlay{position:absolute;inset:0;background:rgba(80,30,0,0.88);display:flex;align-items:center;justify-content:center;z-index:20;}
+#overlay.hidden{display:none;}
+#obox{background:linear-gradient(180deg,#fff9ec,#ffe8b0);border:3px solid #ffc840;border-radius:20px;padding:18px 20px;text-align:center;max-width:250px;box-shadow:0 0 30px rgba(255,200,80,0.4);}
+#otitle{font-size:20px;font-weight:900;color:#c85000;margin-bottom:10px;letter-spacing:1px;}
+.ofstep{display:flex;align-items:center;gap:8px;background:rgba(200,100,0,0.1);border-radius:8px;padding:5px 10px;margin-bottom:4px;text-align:left;}
+.ofnum{width:22px;height:22px;border-radius:50%;background:#f5a800;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.oftxt{font-size:11px;color:#7a3c00;line-height:1.4;}
+.oftxt b{color:#c85000;display:block;}
+#obtn{background:linear-gradient(135deg,#ff9800,#e05000);border:none;border-radius:20px;padding:10px 28px;font-size:14px;font-weight:900;color:#fff;cursor:pointer;margin-top:10px;width:100%;box-shadow:0 5px 0 #a03000,0 0 20px rgba(255,120,0,0.3);}
+#announce{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);background:rgba(80,20,0,0.92);color:#ffe840;font-size:24px;font-weight:900;padding:12px 24px;border-radius:14px;border:3px solid #f5a800;display:none;z-index:30;pointer-events:none;white-space:nowrap;}
+#bottom{flex-shrink:0;padding:3px 8px 4px;display:flex;flex-direction:column;gap:3px;}
+#stepbar{display:flex;gap:3px;}
+.stp{flex:1;text-align:center;font-size:10px;padding:4px 2px;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.08);border-radius:8px;}
+.stp.cur{background:linear-gradient(135deg,#ff9800,#e06000);color:#fff;font-weight:700;box-shadow:0 2px 6px rgba(255,120,0,0.4);}
+.stp.done{background:rgba(0,200,120,0.25);color:#80ffcc;}
+.card{background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,220,100,0.3);border-radius:14px;padding:7px 11px;backdrop-filter:blur(4px);}
+.ctitle{font-size:10px;color:#ffe840;font-weight:700;letter-spacing:1px;margin-bottom:6px;text-shadow:0 1px 3px rgba(0,0,0,0.3);}
+#s1-row{display:flex;align-items:center;gap:10px;}
+.cost-tag{background:rgba(255,255,255,0.15);border:2px solid rgba(255,200,80,0.6);border-radius:14px;padding:8px 14px;text-align:center;flex-shrink:0;}
+.ctv{font-size:22px;font-weight:900;color:#ffe840;text-shadow:0 2px 4px rgba(0,0,0,0.3);}
+.ctl{font-size:9px;color:rgba(255,255,255,0.6);}
+#btn-buy{flex:1;height:42px;border-radius:14px;background:linear-gradient(180deg,#ff9800,#e05000);border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #a03000,0 0 15px rgba(255,120,0,0.3);letter-spacing:1px;}
+#btn-buy:active{transform:translateY(2px);box-shadow:0 1px 0 #903800;}
+#s2-row{display:flex;align-items:center;gap:8px;}
+#btn-confirm{flex:1;height:42px;border-radius:14px;background:linear-gradient(180deg,#50dd18,#28a000);border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #106000,0 0 15px rgba(80,220,0,0.3);}
+#btn-confirm:active{transform:translateY(2px);box-shadow:0 1px 0 #104400;}
+#btn-confirm:disabled{background:#aaa;border-color:#888;box-shadow:none;}
+.mult-tag{background:rgba(255,255,255,0.15);border:2px solid rgba(255,200,80,0.5);border-radius:14px;padding:6px 12px;text-align:center;flex-shrink:0;min-width:58px;}
+.mtv{font-size:22px;font-weight:900;color:#ffe840;text-shadow:0 2px 4px rgba(0,0,0,0.4);}
+.mtl{font-size:9px;color:rgba(255,255,255,0.6);}
+#s3-note{font-size:11px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border-radius:10px;padding:5px 8px;line-height:1.7;margin-bottom:6px;}
+#s3-note b{color:#ffe840;}
+#s3-ctrls{display:flex;align-items:center;gap:5px;margin-bottom:5px;}
+#btn-j1{width:36px;height:36px;border-radius:8px;background:linear-gradient(180deg,#ff9800,#e06000);border:2px solid #c04800;color:#fff;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 2px 0 #903800;flex-shrink:0;}
+#btn-j1:active{transform:translateY(1px);}
+#jinput{flex:1;background:rgba(200,130,0,0.15);border:1.5px solid #d4900a;color:#7a3c00;font-size:14px;font-weight:700;text-align:center;border-radius:8px;padding:5px;outline:none;min-width:0;}
+#jinput:focus{border-color:#ff9800;}
+#btn-jadd{background:linear-gradient(180deg,#ff9800,#e06000);border:2px solid #c04800;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;}
+.jstat{font-size:11px;color:rgba(255,255,255,0.7);line-height:1.7;margin-bottom:5px;}
+.jstat b{color:#ffe840;}
+#s3-btns{display:flex;gap:6px;}
+#btn-skip{flex:1;background:rgba(150,80,0,0.15);border:1.5px solid rgba(200,130,0,0.4);border-radius:8px;padding:4px;font-size:11px;color:#8a4c10;cursor:pointer;}
+#btn-goshoot{flex:1;background:linear-gradient(180deg,#ff9800,#e06000);border:2px solid #c04800;border-radius:8px;padding:4px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;}
+#s4-body{display:flex;gap:10px;align-items:center;}
+.sstats{flex:1;}
+.sr{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;}
+.sl{color:rgba(255,255,255,0.6);}.sv{color:#ffe840;font-weight:700;}
+.firehint{background:rgba(255,150,0,0.2);border:1.5px solid rgba(255,200,0,0.4);border-radius:12px;padding:7px 10px;text-align:center;font-size:11px;color:#ffe840;font-weight:700;line-height:1.7;animation:fhp 1s ease-in-out infinite alternate;}
+@keyframes fhp{0%{background:rgba(255,150,0,0.15);}100%{background:rgba(255,150,0,0.35);}}
+#s5-body{display:flex;align-items:center;gap:10px;}
+.rico{font-size:32px;flex-shrink:0;}
+.rinfo{flex:1;}
+.rtitle{font-size:13px;font-weight:900;color:#ffe840;margin-bottom:2px;}
+.rdetail{font-size:11px;color:rgba(255,255,255,0.75);line-height:1.7;}
+.rdetail b{color:#ffe840;}
+.pos{color:#1a8800!important;}.neg{color:#cc2200!important;}
+#btn-next{background:linear-gradient(135deg,#ff9800,#e05000);border:none;border-radius:14px;padding:8px 14px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0;box-shadow:0 3px 0 #a03000;}
+#tip{font-size:11px;color:#ffcc66;text-align:center;min-height:14px;text-shadow:0 1px 3px rgba(0,0,0,0.3);}
+#cfg-bar{background:rgba(0,0,0,0.25);padding:2px 12px;border-radius:0 0 8px 8px;margin:0 8px;display:flex;justify-content:space-between;align-items:center;font-size:10px;flex-shrink:0;}
+
+/* ════════════════════════════════════════
+   商城Tab 样式
+════════════════════════════════════════ */
+#shop-view{
+  font-family:'PingFang SC','Helvetica Neue',sans-serif;
+  background:#f5f5f5;
+  overflow:hidden;
+}
+/* 商城内部子页面 */
+.shop-page{display:none;flex:1;flex-direction:column;overflow-y:auto;position:absolute;inset:0;}
+.shop-page.active{display:flex;}
+/* 商城顶栏 */
+.shop-navbar{background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:40;}
+.snb-back{font-size:22px;color:#333;cursor:pointer;padding:6px 8px 6px 0;}
+.snb-title{flex:1;font-size:16px;font-weight:700;color:#1a1a1a;}
+.snb-action{font-size:13px;color:#ff6b35;cursor:pointer;font-weight:600;}
+/* 商城首页 */
+.shop-header{background:linear-gradient(135deg,#ff6b35,#ff8f5e);padding:14px 16px 18px;color:#fff;flex-shrink:0;}
+.sh-pts-label{font-size:12px;opacity:0.85;}
+.sh-pts-val{font-size:26px;font-weight:800;}
+.sh-hint{font-size:11px;opacity:0.75;margin-top:3px;}
+.shop-tabs{background:#fff;display:flex;border-bottom:1px solid #eee;padding:0 10px;flex-shrink:0;overflow-x:auto;}
+.shop-tabs::-webkit-scrollbar{display:none;}
+.stab{padding:11px 12px 9px;font-size:13px;color:#666;border-bottom:2px solid transparent;cursor:pointer;font-weight:500;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
+.stab.active{color:#ff6b35;border-bottom-color:#ff6b35;font-weight:700;}
+.goods-grid{padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.goods-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,0.06);cursor:pointer;transition:transform 0.12s;}
+.goods-card:active{transform:scale(0.97);}
+.gc-img{width:100%;aspect-ratio:1;background:#f8f0e8;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;overflow:hidden;}
+.gc-img img{width:100%;height:100%;object-fit:cover;}
+.gc-badge{position:absolute;top:6px;left:6px;color:#fff;font-size:10px;font-weight:700;border-radius:4px;padding:2px 5px;}
+.gc-badge.hot{background:#ff3b30;}
+.gc-badge.new{background:#34c759;}
+.gc-info{padding:9px 10px 11px;}
+.gc-name{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gc-desc-txt{font-size:11px;color:#bbb;margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gc-pts{font-size:14px;font-weight:800;color:#ff6b35;}
+.gc-pts-unit{font-size:11px;font-weight:500;color:#bbb;}
+.gc-stock-txt{font-size:10px;color:#ccc;float:right;margin-top:2px;}
+.gc-exbtn{width:100%;margin-top:7px;padding:6px;background:#ff6b35;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;}
+.gc-exbtn:disabled{background:#eee;color:#bbb;cursor:default;}
+/* 商品详情 */
+.detail-img{width:100%;aspect-ratio:1;background:#f8f0e8;display:flex;align-items:center;justify-content:center;font-size:72px;flex-shrink:0;overflow:hidden;}
+.detail-img img{width:100%;height:100%;object-fit:cover;}
+.detail-body{background:#fff;padding:14px 16px;flex:1;}
+.db-name{font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:5px;}
+.db-pts{font-size:24px;font-weight:800;color:#ff6b35;margin-bottom:3px;}
+.db-stock{font-size:12px;color:#bbb;margin-bottom:12px;}
+.db-divider{height:1px;background:#f0f0f0;margin:12px 0;}
+.db-sec-title{font-size:13px;font-weight:700;color:#333;margin-bottom:7px;}
+.db-desc-txt{font-size:13px;color:#666;line-height:1.7;}
+.db-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.db-tag{background:#fff5f0;color:#ff6b35;font-size:11px;border-radius:4px;padding:2px 7px;font-weight:500;}
+.detail-footer{background:#fff;border-top:1px solid #eee;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-shrink:0;}
+.df-pts-wrap{flex:1;}
+.df-pts-label{font-size:11px;color:#bbb;}
+.df-pts-val{font-size:18px;font-weight:800;color:#ff6b35;}
+.ex-btn{flex:1.2;height:42px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+.ex-btn:disabled{background:#ddd;color:#bbb;}
+/* 地址列表 */
+.addr-list-wrap{padding:10px 12px;flex:1;overflow-y:auto;}
+.addr-card{background:#fff;border-radius:12px;padding:13px 15px;margin-bottom:9px;cursor:pointer;border:2px solid transparent;transition:all 0.15s;position:relative;}
+.addr-card.sel{border-color:#ff6b35;background:#fff8f5;}
+.ac-check{position:absolute;top:13px;right:13px;width:20px;height:20px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;}
+.addr-card.sel .ac-check{background:#ff6b35;border-color:#ff6b35;}
+.ac-name{font-size:14px;font-weight:700;color:#1a1a1a;}
+.ac-phone{font-size:13px;color:#666;}
+.ac-region{font-size:12px;color:#999;margin-top:2px;}
+.ac-default-tag{background:#fff3e0;color:#ff6b35;font-size:10px;border-radius:3px;padding:1px 5px;font-weight:600;margin-left:5px;}
+.add-addr-card{margin:0 12px 10px;background:#fff;border:1.5px dashed #ddd;border-radius:12px;padding:14px;text-align:center;color:#bbb;font-size:13px;cursor:pointer;}
+.addr-confirm-footer{padding:10px 12px;background:#fff;border-top:1px solid #eee;flex-shrink:0;}
+.addr-confirm-btn{width:100%;height:42px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+.addr-confirm-btn:disabled{background:#ddd;color:#bbb;}
+/* 新增地址 */
+.addr-form-wrap{padding:10px 12px;flex:1;overflow-y:auto;}
+.addr-form-card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.afr{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid #f5f5f5;}
+.afr:last-child{border-bottom:none;}
+.afr-label{width:68px;font-size:13px;color:#333;flex-shrink:0;}
+.afr-input{flex:1;border:none;outline:none;font-size:13px;color:#1a1a1a;background:transparent;}
+.afr-input::placeholder{color:#ccc;}
+.save-addr-btn{margin:0 12px 14px;width:calc(100% - 24px);height:42px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+/* 确认兑换 */
+.confirm-wrap{padding:10px 12px;flex:1;overflow-y:auto;}
+.confirm-sec{background:#fff;border-radius:12px;padding:13px 15px;margin-bottom:10px;}
+.csec-title{font-size:11px;color:#bbb;font-weight:600;letter-spacing:0.5px;margin-bottom:9px;}
+.cgoods-row{display:flex;gap:11px;align-items:center;}
+.cgoods-img{width:56px;height:56px;border-radius:8px;background:#f8f0e8;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden;}
+.cgoods-img img{width:100%;height:100%;object-fit:cover;}
+.cgoods-name{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:3px;}
+.cgoods-pts{font-size:15px;font-weight:800;color:#ff6b35;}
+.caddr-name{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
+.caddr-phone{font-size:12px;color:#666;margin-bottom:2px;}
+.caddr-region{font-size:12px;color:#bbb;}
+.csummary-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
+.csr-key{color:#bbb;}.csr-val{color:#1a1a1a;font-weight:500;}
+.csr-total .csr-val{font-size:15px;font-weight:800;color:#ff6b35;}
+.confirm-footer{padding:10px 12px;background:#fff;border-top:1px solid #eee;flex-shrink:0;}
+.submit-btn{width:100%;height:42px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+/* 兑换成功 */
+.success-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;text-align:center;}
+.suc-ico{font-size:64px;margin-bottom:14px;}
+.suc-title{font-size:20px;font-weight:800;color:#1a1a1a;margin-bottom:6px;}
+.suc-sub{font-size:13px;color:#999;line-height:1.6;margin-bottom:22px;}
+.suc-order{background:#fff5f0;border-radius:10px;padding:13px 18px;margin-bottom:20px;width:100%;}
+.sor{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
+.sor-k{color:#bbb;}.sor-v{color:#333;font-weight:600;}
+.suc-btns{width:100%;display:flex;flex-direction:column;gap:9px;}
+.suc-btn-p{height:42px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+.suc-btn-g{height:42px;border:1.5px solid #ff6b35;border-radius:10px;background:#fff;color:#ff6b35;font-size:14px;font-weight:700;cursor:pointer;}
+/* 订单列表 */
+.order-tabs{background:#fff;display:flex;border-bottom:1px solid #eee;padding:0 10px;overflow-x:auto;}
+.order-tabs::-webkit-scrollbar{display:none;}
+.order-list-wrap{padding:10px 12px;flex:1;overflow-y:auto;}
+.order-card{background:#fff;border-radius:12px;padding:13px 15px;margin-bottom:9px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+.oc-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+.oc-no{font-size:11px;color:#ccc;}
+.oc-status{font-size:12px;font-weight:600;}
+.oc-status.pending{color:#ff9500;}.oc-status.approved{color:#007aff;}
+.oc-status.shipped{color:#5856d6;}.oc-status.done{color:#34c759;}.oc-status.rejected{color:#ff3b30;}
+.oc-goods-row{display:flex;gap:9px;align-items:center;margin-bottom:9px;}
+.ocg-img{width:46px;height:46px;border-radius:7px;background:#f8f0e8;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;}
+.ocg-img img{width:100%;height:100%;object-fit:cover;}
+.ocg-name{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
+.ocg-pts{font-size:12px;color:#ff6b35;font-weight:700;}
+.oc-ft{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f5f5f5;}
+.oc-time{font-size:11px;color:#ccc;}
+.oc-action-btn{font-size:12px;color:#ff6b35;font-weight:600;cursor:pointer;padding:3px 9px;border:1px solid #ff6b35;border-radius:6px;}
+.oc-express-info{font-size:11px;color:#666;background:#f5f5f5;border-radius:6px;padding:4px 8px;margin-top:5px;}
+/* 空状态 */
+.s-empty{padding:50px 20px;text-align:center;color:#ccc;}
+.s-empty .ei{font-size:44px;margin-bottom:10px;}
+.s-empty .et{font-size:14px;}
+
+/* ════════════════════════════════════════
+   个人中心Tab 样式
+════════════════════════════════════════ */
+#profile-view{
+  font-family:'PingFang SC','Helvetica Neue',sans-serif;
+  background:#f5f5f5;overflow-y:auto;
+}
+.profile-header{background:linear-gradient(135deg,#667eea,#764ba2);padding:24px 16px 28px;color:#fff;}
+.ph-user-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.ph-avatar{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;}
+.ph-name{font-size:17px;font-weight:700;}
+.ph-phone{font-size:12px;opacity:0.8;margin-top:2px;}
+.ph-id{font-size:11px;opacity:0.6;margin-top:1px;}
+.ph-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;}
+.ph-stat{background:rgba(255,255,255,0.08);padding:12px 8px;text-align:center;}
+.ph-stat-val{font-size:18px;font-weight:800;}
+.ph-stat-label{font-size:10px;opacity:0.75;margin-top:2px;}
+.profile-section{margin:10px 12px 0;}
+.ps-title{font-size:12px;color:#999;font-weight:600;letter-spacing:0.5px;padding:10px 4px 6px;}
+.ps-card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.ps-row{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;}
+.ps-row:last-child{border-bottom:none;}
+.ps-row:active{background:#f9f9f9;}
+.ps-ico{font-size:20px;width:28px;flex-shrink:0;}
+.ps-label{flex:1;font-size:14px;color:#333;margin-left:10px;}
+.ps-val{font-size:13px;color:#bbb;}
+.ps-arrow{color:#ccc;font-size:14px;margin-left:4px;}
+.ps-badge{background:#ff3b30;color:#fff;font-size:10px;border-radius:8px;padding:1px 6px;font-weight:700;margin-right:4px;}
+.pts-highlight{font-size:16px;font-weight:800;color:#ff6b35;}
+.logout-btn{margin:10px 12px 20px;width:calc(100%-24px);background:#fff;border:1.5px solid #ff3b30;border-radius:12px;padding:14px;text-align:center;color:#ff3b30;font-size:14px;font-weight:600;cursor:pointer;}
+
+/* ════════════════════════════════════════
+   Toast & Sheet (全局)
+════════════════════════════════════════ */
+#g-toast-wrap{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none;width:280px;}
+.g-toast{background:rgba(0,0,0,0.72);color:#fff;font-size:13px;border-radius:20px;padding:8px 18px;margin-bottom:8px;text-align:center;animation:gtin 0.2s ease;}
+@keyframes gtin{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+#g-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;}
+#g-sheet-overlay.show{display:block;}
+#g-sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-radius:20px 20px 0 0;z-index:201;max-height:80vh;display:flex;flex-direction:column;}
+.gs-handle{width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:10px auto 0;}
+.gs-title{font-size:15px;font-weight:700;text-align:center;padding:11px 14px 10px;border-bottom:1px solid #f5f5f5;}
+.gs-body{padding:14px;overflow-y:auto;flex:1;}
+.gs-footer{padding:10px 14px;border-top:1px solid #f5f5f5;}
+</style>
+</head>
+<body>
+<!-- ══════════ 登录/注册层 ══════════ -->
+<div id="auth-layer" style="
+  position:fixed;inset:0;z-index:999;
+  background:linear-gradient(160deg,#3d0a7a 0%,#6a1fa0 50%,#1a0535 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'PingFang SC','Helvetica Neue',sans-serif;
+  padding:0 24px;overflow-y:auto;
+">
+  <!-- 背景装饰 -->
+  <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
+    <div style="position:absolute;top:8%;left:12%;width:80px;height:80px;border-radius:50%;background:rgba(255,200,80,0.07);"></div>
+    <div style="position:absolute;top:18%;right:8%;width:50px;height:50px;border-radius:50%;background:rgba(255,100,50,0.09);"></div>
+    <div style="position:absolute;bottom:22%;left:6%;width:100px;height:100px;border-radius:50%;background:rgba(255,200,80,0.05);"></div>
+    <div style="position:absolute;bottom:28%;right:5%;width:60px;height:60px;border-radius:50%;background:rgba(100,150,255,0.07);"></div>
+  </div>
+
+  <!-- LOGO -->
+  <div style="text-align:center;margin-bottom:28px;position:relative;flex-shrink:0;">
+    <div style="font-size:60px;margin-bottom:8px;filter:drop-shadow(0 4px 16px rgba(255,200,80,0.5));">🎯</div>
+    <div style="font-size:26px;font-weight:900;color:#ffe840;letter-spacing:3px;text-shadow:0 2px 12px rgba(255,200,0,0.5);">波珠机</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:5px;letter-spacing:1px;">休闲娱乐 · 积分兑礼</div>
+  </div>
+
+  <!-- 卡片 -->
+  <div style="width:100%;max-width:360px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.18);border-radius:24px;padding:22px 20px;backdrop-filter:blur(16px);flex-shrink:0;">
+
+    <!-- Tab -->
+    <div style="display:flex;background:rgba(0,0,0,0.3);border-radius:12px;padding:3px;margin-bottom:20px;">
+      <div id="tab-login" onclick="switchAuthTab('login')"
+        style="flex:1;text-align:center;padding:9px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.15);color:#fff;">
+        登录
+      </div>
+      <div id="tab-register" onclick="switchAuthTab('register')"
+        style="flex:1;text-align:center;padding:9px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;color:rgba(255,255,255,0.45);">
+        注册
+      </div>
+    </div>
+
+    <!-- ── 登录面板 ── -->
+    <div id="panel-login">
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px;font-weight:600;letter-spacing:0.5px;">手机号</div>
+        <div style="display:flex;align-items:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;padding:0 14px;height:50px;gap:8px;transition:border-color 0.2s;" id="login-phone-wrap">
+          <span style="font-size:18px;">📱</span>
+          <input id="login-phone" type="tel" maxlength="11" placeholder="请输入11位手机号"
+            style="flex:1;border:none;outline:none;background:transparent;font-size:15px;color:#fff;font-weight:500;"
+            oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)">
+        </div>
+      </div>
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px;font-weight:600;letter-spacing:0.5px;">密码</div>
+        <div style="display:flex;align-items:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;padding:0 14px;height:50px;gap:8px;" id="login-pwd-wrap">
+          <span style="font-size:18px;">🔑</span>
+          <input id="login-pwd" type="password" placeholder="请输入密码"
+            style="flex:1;border:none;outline:none;background:transparent;font-size:15px;color:#fff;font-weight:500;">
+          <span id="toggle-login-pwd" onclick="togglePwd('login-pwd','toggle-login-pwd')"
+            style="font-size:16px;cursor:pointer;color:rgba(255,255,255,0.4);">👁</span>
+        </div>
+      </div>
+      <div id="login-err" style="color:#ff8888;font-size:12px;text-align:center;margin-bottom:10px;min-height:16px;"></div>
+      <button onclick="doLogin()"
+        style="width:100%;height:50px;border:none;border-radius:14px;background:linear-gradient(135deg,#ffe840,#ff9800);color:#7a3c00;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 5px 0 #a06000,0 0 20px rgba(255,200,0,0.25);margin-bottom:14px;transition:transform 0.1s;">
+        登　录
+      </button>
+      <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.4);cursor:pointer;" onclick="switchAuthTab('register')">
+        还没有账号？<span style="color:#ffe840;font-weight:700;">立即注册 →</span>
+      </div>
+    </div>
+
+    <!-- ── 注册面板 ── -->
+    <div id="panel-register" style="display:none;">
+      <!-- 手机号 -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px;font-weight:600;letter-spacing:0.5px;">手机号 <span style="color:rgba(255,255,255,0.3);font-weight:400;">（11位，作为登录账号）</span></div>
+        <div style="display:flex;align-items:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;padding:0 14px;height:50px;gap:8px;" id="reg-phone-wrap">
+          <span style="font-size:18px;">📱</span>
+          <input id="reg-phone" type="tel" maxlength="11" placeholder="请输入11位手机号"
+            style="flex:1;border:none;outline:none;background:transparent;font-size:15px;color:#fff;font-weight:500;"
+            oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)">
+          <span id="reg-phone-ok" style="color:#34c759;font-size:14px;display:none;">✓</span>
+        </div>
+      </div>
+      <!-- 身份证号 -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px;font-weight:600;letter-spacing:0.5px;">身份证号 <span style="color:rgba(255,255,255,0.3);font-weight:400;">（18位实名认证）</span></div>
+        <div style="display:flex;align-items:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;padding:0 14px;height:50px;gap:8px;" id="reg-id-wrap">
+          <span style="font-size:18px;">🪪</span>
+          <input id="reg-id" type="text" maxlength="18" placeholder="请输入18位身份证号"
+            style="flex:1;border:none;outline:none;background:transparent;font-size:15px;color:#fff;font-weight:500;letter-spacing:1px;"
+            oninput="validateIDInput(this)">
+          <span id="reg-id-ok" style="color:#34c759;font-size:14px;display:none;">✓</span>
+        </div>
+      </div>
+      <!-- 密码 -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px;font-weight:600;letter-spacing:0.5px;">登录密码 <span style="color:rgba(255,255,255,0.3);font-weight:400;">（6位以上）</span></div>
+        <div style="display:flex;align-items:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;padding:0 14px;height:50px;gap:8px;" id="reg-pwd-wrap">
+          <span style="font-size:18px;">🔑</span>
+          <input id="reg-pwd" type="password" placeholder="设置6位以上密码"
+            style="flex:1;border:none;outline:none;background:transparent;font-size:15px;color:#fff;font-weight:500;">
+          <span id="toggle-reg-pwd" onclick="togglePwd('reg-pwd','toggle-reg-pwd')"
+            style="font-size:16px;cursor:pointer;color:rgba(255,255,255,0.4);">👁</span>
+        </div>
+      </div>
+      <!-- 邀请码 -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px;font-weight:600;letter-spacing:0.5px;">邀请码 <span style="color:rgba(255,200,80,0.6);font-weight:400;">（选填，填写可得奖励积分）</span></div>
+        <div style="display:flex;align-items:center;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:0 14px;height:50px;gap:8px;">
+          <span style="font-size:18px;">🎁</span>
+          <input id="reg-invite" type="text" maxlength="12" placeholder="邀请码（可不填）"
+            style="flex:1;border:none;outline:none;background:transparent;font-size:14px;color:rgba(255,255,255,0.8);text-transform:uppercase;">
+        </div>
+      </div>
+      <div id="reg-err" style="color:#ff8888;font-size:12px;text-align:center;margin-bottom:10px;min-height:16px;"></div>
+      <button onclick="doRegister()"
+        style="width:100%;height:50px;border:none;border-radius:14px;background:linear-gradient(135deg,#ffe840,#ff9800);color:#7a3c00;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 5px 0 #a06000,0 0 20px rgba(255,200,0,0.25);margin-bottom:14px;">
+        注册账号
+      </button>
+      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);">
+        注册即同意 <span style="color:rgba(255,200,80,0.7);">用户协议</span> 和 <span style="color:rgba(255,200,80,0.7);">隐私政策</span>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+  <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.2);text-align:center;flex-shrink:0;">
+    🔒 信息加密传输，安全有保障
+  </div>
+</div><!-- /auth-layer -->
+
+
+<div id="root">
+
+  <!-- ════ TAB VIEWS ════ -->
+  <div id="tab-views">
+
+    <!-- ── 游戏 Tab ── -->
+    <div class="tab-view active" id="game-view" data-tab="game">
+      <div id="cfg-bar">
+        <span style="color:rgba(255,220,100,0.7);">⚙️ 后台配置</span>
+        <span style="color:rgba(255,220,100,0.9);">每局 <b id="cfg-cost-show">5</b> 积分</span>
+        <span style="color:rgba(255,220,100,0.5);" id="cfg-sync-tip"></span>
+      </div>
+      <div id="topbar">
+        <div class="tbadge" onclick="refreshPointsFromAPI()" title="点击刷新积分" style="cursor:pointer;"><div class="tbi tbi-g">积</div><span id="sd">1000</span></div>
+        <span style="color:rgba(255,220,100,0.7);font-size:12px;">＋</span>
+        <div class="tbadge"><div class="tbi tbi-b">珠</div><span id="pd">1000</span></div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <div id="sound-btn" onclick="toggleSound()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:4px 10px;font-size:14px;cursor:pointer;">🔊</div>
+        </div>
+      </div>
+      <div id="infobar">
+        <div class="ist">本轮赌注<b id="cur-bet">0</b></div>
+        <div class="ist">当前倍率<b id="cur-odds">—</b></div>
+        <div class="ist">本轮奖励<b id="cur-win">0</b></div>
+        <div class="ist">累计局数<b id="total-rounds">0</b></div>
+      </div>
+      <div id="multbar">
+        <div id="mbox">
+          <div class="ms" id="ms0"><div class="dd"></div>2</div>
+          <div class="ms" id="ms1"><div class="dd"></div>4</div>
+          <div class="ms" id="ms2"><div class="dd"></div>6</div>
+          <div class="ms" id="ms3"><div class="dd"></div>8</div>
+          <div class="ms" id="ms4"><div class="dd"></div>10</div>
+        </div>
+      </div>
+      <div id="machine-row">
+        <div id="lgutter"></div>
+        <div id="cwrap">
+          <canvas id="gc"></canvas>
+          <div id="overlay">
+            <div id="obox">
+              <div id="otitle">🎯 波珠机</div>
+              <div class="ofstep"><div class="ofnum">1</div><div class="oftxt"><b>投入积分</b>获得本局资格</div></div>
+              <div class="ofstep"><div class="ofnum">2</div><div class="oftxt"><b>确认倍率</b>随机2/4/6/8/10倍</div></div>
+              <div class="ofstep"><div class="ofnum">3</div><div class="oftxt"><b>加注（可选）</b>追加赌注</div></div>
+              <div class="ofstep"><div class="ofnum">4</div><div class="oftxt"><b>蓄力发射</b>右轨上升入场</div></div>
+              <button id="obtn" onclick="openGame()">开始游戏！</button>
+            </div>
+          </div>
+          <div id="announce"></div>
+        </div>
+        <div id="rtube-col">
+          <div id="vtube"><div id="vtube-track"><div id="vtube-fill"></div><div id="vtube-shine"></div></div></div>
+          <div id="rbtm"><div id="pval">0%</div><div id="firebtn" class="off">▲</div></div>
+        </div>
+      </div>
+      <div id="slotsrow"></div>
+      <div id="bottom">
+        <div id="stepbar">
+          <div class="stp cur" id="stp1">① 投入</div>
+          <div class="stp" id="stp2">② 倍率</div>
+          <div class="stp" id="stp3">③ 加注</div>
+          <div class="stp" id="stp4">④ 发射</div>
+        </div>
+        <div id="tip"></div>
+        <div class="card" id="s1"><div class="ctitle">STEP 1 · 投入积分</div>
+          <div id="s1-row"><div class="cost-tag"><div class="ctv" id="s1-cost">5</div><div class="ctl">积分/局</div></div>
+          <button id="btn-buy" onclick="doBuy()">投入 <span id="buy-cost-show">5</span> 积分</button></div>
+        </div>
+        <div class="card" id="s2" style="display:none;"><div class="ctitle">STEP 2 · 确认本局倍率</div>
+          <div id="s2-row"><button id="btn-confirm" onclick="doConfirm()">点击随机<br>确认倍率</button>
+          <div class="mult-tag"><div class="mtl">本局倍率</div><div class="mtv" id="mtv">?</div></div></div>
+        </div>
+        <div class="card" id="s3" style="display:none;"><div class="ctitle">STEP 3 · 加注（可选）</div>
+          <div id="s3-note">赌注 <b id="nb">5</b> × <b id="nm">?</b>倍 = 可赢 <b id="nw">?</b> 积分</div>
+          <div id="s3-ctrls"><button id="btn-j1" onclick="addOne()">＋1</button>
+            <input id="jinput" type="number" min="1" value="10" placeholder="积分数">
+            <button id="btn-jadd" onclick="addCustom()">加注</button></div>
+          <div class="jstat">追加: <b id="jze">0</b>　总赌注: <b id="jzt">5</b> 积分</div>
+          <div id="s3-btns"><button id="btn-skip" onclick="doSkip()">不加注，直接发射</button>
+            <button id="btn-goshoot" onclick="doGoShoot()">确认，去发射</button></div>
+        </div>
+        <div class="card" id="s4" style="display:none;"><div class="ctitle">STEP 4 · 蓄力发射</div>
+          <div id="s4-body">
+            <div class="sstats">
+              <div class="sr"><span class="sl">本局赌注</span><span class="sv" id="s4b">—</span></div>
+              <div class="sr"><span class="sl">当前倍率</span><span class="sv" id="s4m">—</span></div>
+              <div class="sr"><span class="sl">中奖可得</span><span class="sv" id="s4w">—</span></div>
+              <div class="sr"><span class="sl">亮槽/总槽</span><span class="sv" id="s4l">—</span></div>
+            </div>
+            <div class="firehint">按住 ▲<br>蓄力<br>松手发射</div>
+          </div>
+        </div>
+        <div class="card" id="s5" style="display:none;"><div class="ctitle">本局结算</div>
+          <div id="s5-body">
+            <div class="rico" id="rico">🎯</div>
+            <div class="rinfo"><div class="rtitle" id="rtitle">—</div><div class="rdetail" id="rdetail">—</div></div>
+            <button id="btn-next" onclick="nextRound()">再来</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /game-view -->
+
+    <!-- ── 商城 Tab ── -->
+    <div class="tab-view" id="shop-view" data-tab="shop">
+
+      <!-- 商城首页 -->
+      <div class="shop-page active" id="sp-home">
+        <div class="shop-navbar"><div class="snb-title">🛍️ 积分商城</div><span class="snb-action" onclick="shopGoto('sp-orders');renderOrders2()">我的订单</span></div>
+        <div class="shop-header">
+          <div class="sh-pts-label">我的积分</div>
+          <div><span class="sh-pts-val" id="shop-pts">1000</span> 分</div>
+          <div class="sh-hint">积分可兑换精美礼品</div>
+        </div>
+        <div class="shop-tabs" id="shop-cat-tabs">
+          <div class="stab active" onclick="filterGoods2('all',this)">全部</div>
+          <div class="stab" onclick="filterGoods2('hot',this)">热门</div>
+          <div class="stab" onclick="filterGoods2('new',this)">新品</div>
+          <div class="stab" onclick="filterGoods2('digital',this)">数码</div>
+          <div class="stab" onclick="filterGoods2('life',this)">生活</div>
+          <div class="stab" onclick="filterGoods2('food',this)">美食</div>
+        </div>
+        <div class="goods-grid" id="goods-grid2"></div>
+      </div>
+
+      <!-- 商品详情 -->
+      <div class="shop-page" id="sp-detail">
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title" id="sp-detail-title"></div></div>
+        <div class="detail-img" id="sp-detail-img"></div>
+        <div class="detail-body">
+          <div class="db-name" id="sp-detail-name"></div>
+          <div class="db-pts">🪙 <span id="sp-detail-pts"></span> 积分</div>
+          <div class="db-stock" id="sp-detail-stock"></div>
+          <div class="db-divider"></div>
+          <div class="db-sec-title">商品详情</div>
+          <div class="db-desc-txt" id="sp-detail-desc"></div>
+          <div class="db-tags" id="sp-detail-tags"></div>
+        </div>
+        <div class="detail-footer">
+          <div class="df-pts-wrap"><div class="df-pts-label">兑换所需</div><div class="df-pts-val"><span id="sp-footer-pts"></span> 积分</div></div>
+          <button class="ex-btn" id="sp-ex-btn" onclick="shopGoto('sp-addr');renderAddrList2()">立即兑换</button>
+        </div>
+      </div>
+
+      <!-- 选择地址 -->
+      <div class="shop-page" id="sp-addr">
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title">选择收货地址</div><span class="snb-action" onclick="shopGoto('sp-add-addr')">新增</span></div>
+        <div class="addr-list-wrap" id="addr-list2"></div>
+        <div class="addr-confirm-footer"><button class="addr-confirm-btn" id="addr-confirm-btn2" onclick="shopGoto('sp-confirm');renderConfirm2()" disabled>确认地址</button></div>
+      </div>
+
+      <!-- 新增地址 -->
+      <div class="shop-page" id="sp-add-addr">
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title">新增收货地址</div></div>
+        <div class="addr-form-wrap">
+          <div class="addr-form-card">
+            <div class="afr"><span class="afr-label">收货人</span><input class="afr-input" id="new-name2" placeholder="请输入姓名"></div>
+            <div class="afr"><span class="afr-label">手机号</span><input class="afr-input" id="new-phone2" placeholder="请输入手机号" type="tel"></div>
+            <div class="afr"><span class="afr-label">所在地区</span><input class="afr-input" id="new-region2" placeholder="省 / 市 / 区"></div>
+            <div class="afr"><span class="afr-label">详细地址</span><input class="afr-input" id="new-detail2" placeholder="街道、楼栋、门牌号等"></div>
+          </div>
+        </div>
+        <button class="save-addr-btn" onclick="saveAddr2()">保存地址</button>
+      </div>
+
+      <!-- 确认兑换 -->
+      <div class="shop-page" id="sp-confirm">
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title">确认兑换</div></div>
+        <div class="confirm-wrap" id="confirm-wrap2"></div>
+        <div class="confirm-footer"><button class="submit-btn" onclick="submitOrder2()">确认兑换 · <span id="submit-pts2"></span> 积分</button></div>
+      </div>
+
+      <!-- 兑换成功 -->
+      <div class="shop-page" id="sp-success">
+        <div class="shop-navbar"><div class="snb-title" style="text-align:center;">兑换成功</div></div>
+        <div class="success-wrap">
+          <div class="suc-ico">🎉</div>
+          <div class="suc-title">兑换申请已提交！</div>
+          <div class="suc-sub">管理员审核通过后将安排发货<br>请留意订单状态更新</div>
+          <div class="suc-order" id="suc-order-info2"></div>
+          <div class="suc-btns">
+            <button class="suc-btn-p" onclick="shopGoto('sp-orders');renderOrders2()">查看订单</button>
+            <button class="suc-btn-g" onclick="shopGoto('sp-home');renderGoods2()">继续逛逛</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 我的订单 -->
+      <div class="shop-page" id="sp-orders">
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title">我的订单</div></div>
+        <div class="order-tabs" id="order-tabs2">
+          <div class="stab active" onclick="filterOrders2('all',this)">全部</div>
+          <div class="stab" onclick="filterOrders2('pending',this)">待审核</div>
+          <div class="stab" onclick="filterOrders2('approved',this)">待发货</div>
+          <div class="stab" onclick="filterOrders2('shipped',this)">已发货</div>
+          <div class="stab" onclick="filterOrders2('done',this)">已完成</div>
+        </div>
+        <div class="order-list-wrap" id="order-list2"></div>
+      </div>
+
+    </div><!-- /shop-view -->
+
+    <!-- ── 个人中心 Tab ── -->
+    <div class="tab-view" id="profile-view" data-tab="profile" style="position:relative;">
+
+      <!-- 充值页面（覆盖在个人中心上） -->
+      <div id="recharge-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:10;flex-direction:column;overflow-y:auto;">
+        <div style="background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:5;">
+          <div style="font-size:22px;cursor:pointer;padding:6px 8px 6px 0;" onclick="hideRechargePage()">←</div>
+          <div style="flex:1;font-size:16px;font-weight:700;color:#1a1a1a;">充值积分</div>
+          <div style="font-size:13px;color:#ff6b35;cursor:pointer;font-weight:600;margin-right:10px;" onclick="refreshPointsFromAPI().then(()=>gToast('积分已刷新'))">🔄</div>
+          <div style="font-size:13px;color:#ff6b35;cursor:pointer;font-weight:600;" onclick="showRechargeRecords()">充值记录</div>
+        </div>
+        <!-- 当前积分 -->
+        <div style="background:linear-gradient(135deg,#6a1fa0,#3d0f6e);padding:16px;margin:10px 12px;border-radius:14px;color:#fff;">
+          <div style="font-size:12px;opacity:0.8;margin-bottom:4px;">当前积分余额</div>
+          <div style="font-size:28px;font-weight:800;" id="rc-current-pts">1000</div>
+          <div style="font-size:11px;opacity:0.65;margin-top:4px;">充值后积分由管理员审核发放</div>
+        </div>
+        <!-- 充值档位 -->
+        <div style="padding:0 12px;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">选择充值档位</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="tier-grid"></div>
+        </div>
+        <!-- 自定义金额 -->
+        <div style="margin:0 12px 10px;background:#fff;border-radius:12px;padding:14px 16px;">
+          <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">自定义金额</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="display:flex;align-items:center;background:#f5f5f5;border-radius:10px;padding:8px 12px;flex:1;border:1.5px solid #eee;" id="custom-input-wrap">
+              <span style="font-size:16px;color:#999;margin-right:4px;">¥</span>
+              <input id="custom-amount" type="number" min="1" placeholder="输入金额" style="border:none;outline:none;background:transparent;font-size:16px;font-weight:700;color:#1a1a1a;flex:1;width:0;">
+            </div>
+            <div style="font-size:13px;color:#999;" id="custom-pts-preview">= 0 积分</div>
+          </div>
+        </div>
+        <!-- 已选档位显示 -->
+        <div style="margin:0 12px 10px;background:#fff8f0;border:1.5px solid #ff6b35;border-radius:12px;padding:12px 16px;display:none;" id="selected-tier-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:12px;color:#999;margin-bottom:2px;">本次充值</div>
+              <div style="font-size:20px;font-weight:800;color:#1a1a1a;">¥<span id="sel-amount">0</span></div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:12px;color:#999;margin-bottom:2px;">到账积分</div>
+              <div style="font-size:20px;font-weight:800;color:#ff6b35;"><span id="sel-pts">0</span> 分</div>
+            </div>
+            <div style="text-align:right;" id="sel-bonus-wrap">
+              <div style="font-size:12px;color:#999;margin-bottom:2px;">赠送积分</div>
+              <div style="font-size:16px;font-weight:700;color:#34c759;">+<span id="sel-bonus">0</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- 提交按钮 -->
+        <div style="padding:0 12px 20px;">
+          <button id="btn-next-recharge" onclick="goToPayment()" disabled style="width:100%;height:46px;border:none;border-radius:12px;background:#ddd;color:#aaa;font-size:15px;font-weight:700;cursor:default;transition:all 0.2s;">下一步：查看收款码</button>
+        </div>
+      </div>
+
+      <!-- 收款码页面 -->
+      <div id="payment-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:11;flex-direction:column;">
+        <div style="background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;">
+          <div style="font-size:22px;cursor:pointer;padding:6px 8px 6px 0;" onclick="hidePaymentPage()">←</div>
+          <div style="flex:1;font-size:16px;font-weight:700;color:#1a1a1a;">扫码付款</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:14px 16px;">
+          <!-- 金额提示 -->
+          <div style="background:linear-gradient(135deg,#ff6b35,#ff4500);border-radius:14px;padding:16px;color:#fff;margin-bottom:14px;text-align:center;">
+            <div style="font-size:13px;opacity:0.85;margin-bottom:4px;">请向以下账户转账</div>
+            <div style="font-size:32px;font-weight:900;">¥<span id="pay-amount">0</span></div>
+            <div style="font-size:12px;opacity:0.75;margin-top:4px;">到账 <span id="pay-pts-show" style="font-weight:700;"></span> 积分</div>
+          </div>
+          <!-- 收款码 -->
+          <div style="background:#fff;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:14px;" id="qr-type-label">微信收款码</div>
+            <!-- 收款码切换 -->
+            <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px;">
+              <button onclick="switchQR('wechat')" id="btn-qr-wx" style="padding:5px 14px;border-radius:20px;border:1.5px solid #07c160;background:#07c160;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">微信</button>
+              <button onclick="switchQR('alipay')" id="btn-qr-ali" style="padding:5px 14px;border-radius:20px;border:1.5px solid #ddd;background:#fff;color:#999;font-size:12px;font-weight:600;cursor:pointer;">支付宝</button>
+            </div>
+            <!-- 二维码占位（实际项目替换为真实收款码图片） -->
+            <div id="qr-display" style="width:180px;height:180px;margin:0 auto 12px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:2px solid #f0f0f0;background:#fafafa;position:relative;overflow:hidden;">
+              <div id="qr-placeholder" style="text-align:center;">
+                <div style="font-size:48px;margin-bottom:8px;" id="qr-ico">💚</div>
+                <div style="font-size:11px;color:#999;" id="qr-sub">微信收款码</div>
+                <div style="font-size:10px;color:#ccc;margin-top:4px;">(管理员后台配置)</div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:#999;">截图保存后用微信/支付宝扫码</div>
+          </div>
+          <!-- 注意事项 -->
+          <div style="background:#fff8f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#ff6b35;line-height:1.8;">
+            <div style="font-weight:700;margin-bottom:4px;">⚠️ 转账注意事项</div>
+            <div>• 转账金额请与所选档位 <b>¥<span id="notice-amount">0</span></b> 保持一致</div>
+            <div>• 转账后点击「我已付款」提交申请</div>
+            <div>• 管理员审核后积分自动到账（通常1小时内）</div>
+            <div>• 请勿重复提交，如有问题联系客服</div>
+          </div>
+          <!-- 备注建议 -->
+          <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:8px;">转账备注（建议填写）</div>
+            <div style="background:#f5f5f5;border-radius:8px;padding:8px 12px;font-size:13px;color:#666;display:flex;justify-content:space-between;align-items:center;">
+              <span id="remark-text">充值 用户#1001</span>
+              <span style="color:#ff6b35;font-size:12px;cursor:pointer;" onclick="copyRemark()">复制</span>
+            </div>
+          </div>
+        </div>
+        <!-- 底部按钮 -->
+        <div style="padding:12px 16px;background:#fff;border-top:1px solid #eee;display:flex;gap:10px;">
+          <button onclick="hidePaymentPage()" style="flex:1;height:44px;border:1.5px solid #ddd;border-radius:12px;background:#fff;color:#666;font-size:14px;font-weight:600;cursor:pointer;">返回修改</button>
+          <button onclick="submitRecharge()" style="flex:2;height:44px;border:none;border-radius:12px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 3px 8px rgba(255,100,0,0.3);">✅ 我已付款，提交申请</button>
+        </div>
+      </div>
+
+      <!-- 充值记录页面 -->
+      <div id="recharge-records-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:12;flex-direction:column;">
+        <div style="background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;">
+          <div style="font-size:22px;cursor:pointer;padding:6px 8px 6px 0;" onclick="hideRecordsPage()">←</div>
+          <div style="flex:1;font-size:16px;font-weight:700;color:#1a1a1a;">充值记录</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:10px 12px;" id="recharge-records-list"></div>
+      </div>
+
+    
+        <!-- ══ 邀请好友页面 ══ -->
+      <div id="invite-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:13;flex-direction:column;overflow-y:auto;">
+        <!-- 顶栏 -->
+        <div style="background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:5;">
+          <div style="font-size:22px;cursor:pointer;padding:6px 8px 6px 0;" onclick="hideInvitePage()">←</div>
+          <div style="flex:1;font-size:16px;font-weight:700;color:#1a1a1a;">邀请好友</div>
+        </div>
+        <!-- 邀请头部 -->
+        <div style="background:linear-gradient(135deg,#ff6b35,#ff4500);padding:20px 16px 28px;color:#fff;flex-shrink:0;">
+          <div style="text-align:center;margin-bottom:16px;">
+            <div style="font-size:40px;margin-bottom:6px;">🎁</div>
+            <div style="font-size:18px;font-weight:800;">邀请好友，双方得奖励</div>
+            <div style="font-size:12px;opacity:0.85;margin-top:4px;">好友注册完成实名后，双方均可获得积分奖励</div>
+          </div>
+          <!-- 奖励说明 -->
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;background:rgba(255,255,255,0.18);border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:24px;font-weight:900;" id="invite-reward-val">100</div>
+              <div style="font-size:11px;opacity:0.85;margin-top:2px;">你获得积分</div>
+            </div>
+            <div style="width:1px;background:rgba(255,255,255,0.2);"></div>
+            <div style="flex:1;background:rgba(255,255,255,0.18);border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:24px;font-weight:900;" id="invite-new-reward-val">50</div>
+              <div style="font-size:11px;opacity:0.85;margin-top:2px;">好友获得积分</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 我的邀请码 -->
+        <div style="margin:12px 12px 0;background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.06);">
+          <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">我的邀请码</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;background:#fff5f0;border:2px dashed #ff6b35;border-radius:12px;padding:12px 16px;text-align:center;">
+              <div style="font-size:26px;font-weight:900;color:#ff6b35;letter-spacing:4px;" id="my-invite-code">INV1001</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button onclick="copyInviteCode()" style="width:72px;height:38px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">复制</button>
+              <button onclick="shareInvite()" style="width:72px;height:38px;border:1.5px solid #ff6b35;border-radius:10px;background:#fff;color:#ff6b35;font-size:12px;font-weight:700;cursor:pointer;">分享</button>
+            </div>
+          </div>
+          <!-- 邀请链接 -->
+          <div style="margin-top:10px;background:#f9f9f9;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+            <div style="font-size:11px;color:#999;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="invite-link">复制邀请码分享给好友</div>
+            <div style="font-size:12px;color:#ff6b35;cursor:pointer;white-space:nowrap;font-weight:600;" onclick="copyInviteLink()">复制链接</div>
+          </div>
+        </div>
+
+        <!-- 邀请步骤 -->
+        <div style="margin:10px 12px 0;background:#fff;border-radius:14px;padding:14px 16px;">
+          <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:12px;">如何邀请？</div>
+          <div style="display:flex;gap:0;position:relative;">
+            <!-- 连接线 -->
+            <div style="position:absolute;top:20px;left:20px;right:20px;height:2px;background:linear-gradient(to right,#ff6b35,#ff9800,#34c759);z-index:0;"></div>
+            <!-- 步骤 -->
+            <div style="flex:1;text-align:center;position:relative;z-index:1;">
+              <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;">①</div>
+              <div style="font-size:11px;color:#666;line-height:1.4;">复制邀请码<br>发给好友</div>
+            </div>
+            <div style="flex:1;text-align:center;position:relative;z-index:1;">
+              <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff9800,#e06000);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;">②</div>
+              <div style="font-size:11px;color:#666;line-height:1.4;">好友注册时<br>填写邀请码</div>
+            </div>
+            <div style="flex:1;text-align:center;position:relative;z-index:1;">
+              <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#34c759,#1a8800);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;">③</div>
+              <div style="font-size:11px;color:#666;line-height:1.4;">双方自动<br>获得积分</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 统计数据 -->
+        <div style="margin:10px 12px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+            <div style="font-size:22px;font-weight:800;color:#ff6b35;" id="stat-invite-count">0</div>
+            <div style="font-size:10px;color:#999;margin-top:2px;">已邀请人数</div>
+          </div>
+          <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+            <div style="font-size:22px;font-weight:800;color:#34c759;" id="stat-invite-pts">0</div>
+            <div style="font-size:10px;color:#999;margin-top:2px;">累计获得积分</div>
+          </div>
+          <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+            <div style="font-size:22px;font-weight:800;color:#007aff;" id="stat-invite-today">0</div>
+            <div style="font-size:10px;color:#999;margin-top:2px;">今日新增</div>
+          </div>
+        </div>
+
+        <!-- 邀请记录 -->
+        <div style="margin:10px 12px 16px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+          <div style="padding:12px 16px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:13px;font-weight:700;color:#333;">邀请记录</div>
+            <div style="font-size:11px;color:#999;">共 <span id="invite-record-total">0</span> 条</div>
+          </div>
+          <div id="invite-records-list" style="max-height:300px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+    <div class="profile-header">
+        <div class="ph-user-row">
+          <div class="ph-avatar">👤</div>
+          <div>
+            <div class="ph-name">用户昵称</div>
+            <div class="ph-phone">138****8001</div>
+            <div class="ph-id">ID: #1001 · 已实名认证 ✓</div>
+          </div>
+        </div>
+        <div class="ph-stats">
+          <div class="ph-stat"><div class="ph-stat-val" id="prof-pts">1000</div><div class="ph-stat-label">当前积分</div></div>
+          <div class="ph-stat"><div class="ph-stat-val" id="prof-rounds">0</div><div class="ph-stat-label">累计游戏局数</div></div>
+          <div class="ph-stat"><div class="ph-stat-val" id="prof-orders">2</div><div class="ph-stat-label">兑换订单</div></div>
+        </div>
+      </div>
+      <div class="profile-section">
+        <div class="ps-title">我的资产</div>
+        <div class="ps-card">
+          <div class="ps-row" onclick="switchTab('shop')"><div class="ps-ico">🪙</div><div class="ps-label">我的积分</div><div class="ps-val pts-highlight" id="prof-pts2">1000</div><div class="ps-arrow">›</div></div>
+          <div class="ps-row" onclick="showRechargePage()"><div class="ps-ico">💰</div><div class="ps-label">充值积分</div><div class="ps-val" style="color:#ff6b35;font-weight:700;">去充值 ›</div></div>
+          <div class="ps-row" onclick="switchTab('shop');shopGoto('sp-orders');renderOrders2()"><div class="ps-ico">📦</div><div class="ps-label">兑换订单</div><div class="ps-val"><span class="ps-badge">2</span></div><div class="ps-arrow">›</div></div>
+          <div class="ps-row" onclick="showRechargeRecords()"><div class="ps-ico">💳</div><div class="ps-label">充值记录</div><div class="ps-val" id="recharge-record-count">3笔</div><div class="ps-arrow">›</div></div>
+        </div>
+        <div class="ps-title">游戏记录</div>
+        <div class="ps-card">
+          <div class="ps-row"><div class="ps-ico">🎯</div><div class="ps-label">游戏账单</div><div class="ps-val" id="prof-rounds2">共0局</div><div class="ps-arrow">›</div></div>
+          <div class="ps-row"><div class="ps-ico">🏆</div><div class="ps-label">累计中奖</div><div class="ps-val" id="prof-wins">0次</div><div class="ps-arrow">›</div></div>
+        </div>
+        <div class="ps-title">邀请好友</div>
+        <div class="ps-card">
+          <div class="ps-row" onclick="showInvitePage()"><div class="ps-ico">🎁</div><div class="ps-label">邀请好友得积分</div><div class="ps-val" style="color:#ff6b35;font-weight:700;" id="prof-invite-code">INV1001</div><div class="ps-arrow">›</div></div>
+          <div class="ps-row" onclick="showInvitePage()"><div class="ps-ico">👫</div><div class="ps-label">已邀请好友</div><div class="ps-val" id="prof-invite-count">0人</div><div class="ps-arrow">›</div></div>
+          <div class="ps-row" onclick="showInvitePage()"><div class="ps-ico">💰</div><div class="ps-label">邀请累计获得</div><div class="ps-val" id="prof-invite-pts" style="color:#ff6b35;">+0</div><div class="ps-arrow">›</div></div>
+        </div>
+        <div class="ps-title">账号设置</div>
+        <div class="ps-card">
+          <div class="ps-row"><div class="ps-ico">🔒</div><div class="ps-label">修改密码</div><div class="ps-val"></div><div class="ps-arrow">›</div></div>
+          <div class="ps-row"><div class="ps-ico">📱</div><div class="ps-label">手机号</div><div class="ps-val">138****8001</div><div class="ps-arrow">›</div></div>
+        </div>
+      </div>
+      <div class="logout-btn" onclick="gToast('退出登录成功')">退出登录</div>
+    </div><!-- /profile-view -->
+
+  </div><!-- /tab-views -->
+
+  <!-- ── 底部导航 ── -->
+  <div id="bottom-nav">
+    <div class="bn-item active" id="bn-game" onclick="switchTab('game')">
+      <div class="bni-ico">🎯</div>
+      <span>游戏</span>
+    </div>
+    <div class="bn-item" id="bn-shop" onclick="switchTab('shop')">
+      <div class="bni-ico">🛍️</div>
+      <span>商城</span>
+      <div class="bn-dot" id="shop-dot"></div>
+    </div>
+    <div class="bn-item" id="bn-profile" onclick="switchTab('profile')">
+      <div class="bni-ico">👤</div>
+      <span>我的</span>
+    </div>
+  </div>
+
+</div><!-- /root -->
+
+<!-- 全局 Toast -->
+<div id="g-toast-wrap"></div>
+<!-- 全局 Sheet -->
+<div id="g-sheet-overlay" onclick="closeGSheet()"></div>
+<div id="g-sheet" style="display:none;">
+  <div class="gs-handle"></div>
+  <div class="gs-title" id="gs-title"></div>
+  <div class="gs-body" id="gs-body"></div>
+  <div class="gs-footer"><button style="width:100%;height:38px;border:none;border-radius:8px;background:#f5f5f5;color:#333;font-size:13px;cursor:pointer;" onclick="closeGSheet()">关闭</button></div>
+</div>
+
+<!-- Matter.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════════
+// API 客户端（连接后端真实接口）
+// 后端地址: https://bozhuji-backend.onrender.com
+// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// 前端 API 客户端
+// 把这段代码复制到 app.html 的 <script> 最顶部
+// 替换 API_BASE 为你的 Render 部署地址
+// ══════════════════════════════════════════════════════
+
+const API_BASE = 'https://bozhuji-backend.onrender.com';
+
+// ── HTTP 请求封装 ──────────────────────────────────────
+async function apiRequest(method, path, data = null, requireAuth = true) {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem('bzm_token');
+  if (requireAuth && token) headers['Authorization'] = 'Bearer ' + token;
+
+  const opts = { method, headers };
+  if (data && method !== 'GET') opts.body = JSON.stringify(data);
+
+  try {
+    const url = API_BASE + path;
+    const res = await fetch(url, opts);
+    const json = await res.json();
+
+    // Token过期自动跳登录
+    if (json.code === 401) {
+      localStorage.removeItem('bzm_token');
+      localStorage.removeItem('bzm_user');
+      location.reload();
+      return null;
+    }
+    return json;
+  } catch (e) {
+    console.error('API Error:', path, e);
+    return { code: 500, msg: '网络错误，请检查连接' };
+  }
+}
+
+const api = {
+  get:    (path, auth=true)       => apiRequest('GET',    path, null, auth),
+  post:   (path, data, auth=true) => apiRequest('POST',   path, data, auth),
+  put:    (path, data, auth=true) => apiRequest('PUT',    path, data, auth),
+  delete: (path, auth=true)       => apiRequest('DELETE', path, null, auth),
+};
+
+// ══════════════════════════════════════════════════════
+// 替换各模块的 API 调用
+// ══════════════════════════════════════════════════════
+
+// ── 登录（替换 doLogin 函数）─────────────────────────
+async function doLogin() {
+  const phone = document.getElementById('login-phone').value.trim();
+  const pwd   = document.getElementById('login-pwd').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+
+  if (!isValidPhone(phone)) { errEl.textContent = '请输入正确的11位手机号'; return; }
+  if (!pwd || pwd.length < 6) { errEl.textContent = '密码至少6位'; return; }
+
+  const res = await api.post('/api/auth/login', { phone, password: pwd }, false);
+  if (!res) return;
+  if (res.code !== 200) { errEl.textContent = res.msg; return; }
+
+  // 保存登录状态
+  localStorage.setItem('bzm_token', res.data.token);
+  localStorage.setItem('bzm_user', JSON.stringify({
+    uid: res.data.uid, phone: res.data.phone,
+    invite_code: res.data.invite_code, points: res.data.points,
+    verified: true
+  }));
+  currentUser = res.data;
+  userPearls  = res.data.points;
+  authToast('登录成功！欢迎回来 👋');
+  setTimeout(enterApp, 600);
+}
+
+// ── 注册（替换 doRegister 函数）─────────────────────
+async function doRegister() {
+  const phone  = document.getElementById('reg-phone').value.trim();
+  const idno   = document.getElementById('reg-id').value.trim().toUpperCase();
+  const pwd    = document.getElementById('reg-pwd').value;
+  const invite = document.getElementById('reg-invite').value.trim().toUpperCase();
+  const errEl  = document.getElementById('reg-err');
+  errEl.textContent = '';
+
+  if (!isValidPhone(phone))  { errEl.textContent = '请输入正确的11位手机号'; return; }
+  if (!isValidID(idno))      { errEl.textContent = '身份证号无效，请核对后重新输入'; return; }
+  if (!pwd || pwd.length < 6){ errEl.textContent = '密码至少6位'; return; }
+
+  const res = await api.post('/api/auth/register', {
+    phone, id_no: idno, password: pwd,
+    invite_code: invite || undefined
+  }, false);
+  if (!res) return;
+  if (res.code !== 200) { errEl.textContent = res.msg; return; }
+
+  localStorage.setItem('bzm_token', res.data.token);
+  localStorage.setItem('bzm_user', JSON.stringify({
+    uid: res.data.uid, phone: res.data.phone,
+    invite_code: res.data.invite_code, points: res.data.points, verified: true
+  }));
+  currentUser = res.data;
+  userPearls  = res.data.points;
+  if (invite && res.data.points > 0) authToast('注册成功！邀请奖励 +' + res.data.points + ' 积分 🎁');
+  else authToast('注册成功！欢迎加入波珠机 🎉');
+  setTimeout(enterApp, 800);
+}
+
+// ── 游戏：开局扣费 ────────────────────────────────────
+async function doBuy() {
+  _cfg = loadGameConfig(); COST_BASE = _cfg.COST_BASE;
+  if (userPearls < COST_BASE) { setTip('积分不足，前往充值！'); return; }
+
+  const res = await api.post('/api/game/start', {});
+  if (!res || res.code !== 200) { setTip(res?.msg || '开局失败'); return; }
+
+  userPearls  = res.data.points_after;
+  baseBet     = COST_BASE; extraBet = 0; totalBet = COST_BASE;
+  ballFired   = false; ballLanded = false; currentMult = 0;
+  syncPoints(); goPhase('step2');
+}
+
+// ── 游戏：确认倍率（服务端决定）────────────────────
+async function doConfirm() {
+  if (spinning) return;
+  document.getElementById('btn-confirm').disabled = true;
+  spinning = true;
+
+  // 先做转盘动画
+  let ticks = 0, total = 14 + Math.floor(Math.random() * 8);
+  const iv = setInterval(async () => {
+    const ri = Math.floor(Math.random() * 5);
+    document.querySelectorAll('.ms').forEach((el,i) => el.className = 'ms' + (i===ri ? ' spin' : ''));
+    playSound('spin'); ticks++;
+    if (ticks >= total) {
+      clearInterval(iv);
+      // 调用服务端获取真实倍率
+      const res = await api.post('/api/game/spin', {});
+      if (!res || res.code !== 200) { spinning = false; setTip('获取倍率失败'); return; }
+
+      const { mult, lit_slots } = res.data;
+      currentMult = mult;
+      // 更新前端亮槽
+      litSlots.clear();
+      lit_slots.forEach(i => litSlots.add(i));
+
+      const multIdx = [2,4,6,8,10].indexOf(mult);
+      document.querySelectorAll('.ms').forEach((el,i) => el.className = 'ms' + (i===multIdx ? ' active' : ''));
+      document.getElementById('mtv').textContent = mult + 'x';
+
+      // 更新槽位显示
+      for (let i = 0; i < NUM_SLOTS; i++) {
+        const el = document.getElementById('sl' + i);
+        if (!el) continue;
+        if (i === NUM_SLOTS - 1) { el.className='slot'; el.textContent='↺'; }
+        else { el.className = 'slot' + (litSlots.has(i) ? ' lit' : ''); el.textContent = mult + 'x'; }
+      }
+
+      showAnnounce(mult + 'x 倍率！');
+      spinning = false;
+      setTimeout(() => goPhase('step3'), 700);
+    }
+  }, 75);
+}
+
+// ── 游戏：加注 ────────────────────────────────────────
+async function addOne() {
+  if (userPearls < 1) { setTip('积分不足'); return; }
+  const res = await api.post('/api/game/extra-bet', { amount: 1 });
+  if (!res || res.code !== 200) { setTip(res?.msg || '加注失败'); return; }
+  userPearls = res.data.points_after; extraBet += 1; totalBet = baseBet + extraBet;
+  updateS3(); syncPoints();
+}
+
+async function addCustom() {
+  const v = parseInt(document.getElementById('jinput').value) || 0;
+  if (v <= 0) { setTip('请输入有效积分数'); return; }
+  const actual = Math.min(v, userPearls);
+  if (actual <= 0) { setTip('积分不足'); return; }
+  const res = await api.post('/api/game/extra-bet', { amount: actual });
+  if (!res || res.code !== 200) { setTip(res?.msg || '加注失败'); return; }
+  userPearls = res.data.points_after; extraBet += actual; totalBet = baseBet + extraBet;
+  if (actual < v) setTip('积分不足，已加注' + actual + '积分');
+  updateS3(); syncPoints();
+}
+
+// ── 游戏：结算 ────────────────────────────────────────
+async function settleBall(hitSlot) {
+  const res = await api.post('/api/game/settle', {
+    bet_amount: totalBet,
+    multiplier: currentMult,
+    lit_slots:  [...litSlots],
+    hit_slot:   hitSlot,
+    power:      power
+  });
+  if (!res || res.code !== 200) { setTip('结算失败，请联系客服'); return; }
+
+  if (res.data.is_return) {
+    // 回收槽，免费再射
+    userPearls += totalBet; // 退还
+    syncPoints();
+    ballFired = false; ballLanded = false; launchState = 'waiting';
+    document.getElementById('firebtn').classList.remove('off');
+    setTip('⚡ 蓄力太小没弹出！免费再射一次');
+    showAnnounce('再射一次！');
+    return;
+  }
+
+  userPearls = res.data.points_after;
+  syncPoints();
+  showResult(res.data.win_amount);
+}
+
+// ── 充值：提交申请 ────────────────────────────────────
+async function submitRecharge() {
+  const { amount, pts } = getSelectedAmount();
+  const res = await api.post('/api/recharge/submit', {
+    amount, pay_type: currentQR, remark: document.getElementById('remark-text').textContent
+  });
+  if (!res || res.code !== 200) { gToast(res?.msg || '提交失败'); return; }
+
+  rechargeRecords.unshift({
+    id: res.data.order_id, amount, pts: res.data.points,
+    time: new Date().toLocaleString(), status: 'pending', remark: '等待审核'
+  });
+  document.getElementById('payment-page').style.display = 'none';
+  document.getElementById('recharge-page').style.display = 'none';
+
+  showGSheet('申请已提交 ✅', `<div style="text-align:center;padding:10px 0 16px;">
+    <div style="font-size:56px;margin-bottom:12px;">🎉</div>
+    <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">充值申请已提交</div>
+    <div style="font-size:13px;color:#999;line-height:1.8;margin-bottom:16px;">管理员审核通过后积分将自动到账</div>
+    <div style="background:#fff8f0;border-radius:10px;padding:12px 16px;margin-bottom:16px;text-align:left;">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:#999;">订单号</span><span style="font-weight:600;">${res.data.order_id}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:#999;">充值金额</span><span style="font-weight:600;">¥${amount}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:#999;">预计到账</span><span style="font-weight:700;color:#ff6b35;">${res.data.points} 积分</span></div>
+    </div>
+    <button onclick="closeGSheet();showRechargeRecords();" style="width:100%;height:42px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">查看充值记录</button>
+  </div>`);
+}
+
+// ── 商城：提交兑换（替换 submitOrder2）───────────────
+async function submitOrder2() {
+  if (!currentUser) { gToast('请先登录'); return; }
+  const g    = currentGoods2;
+  const addr = addresses.find(a => a.id === selectedAddrId2);
+  if (!addr) { gToast('请选择收货地址'); return; }
+
+  const res = await api.post('/api/shop/exchange', {
+    goods_id: g.id, addr_id: addr.id
+  });
+  if (!res || res.code !== 200) { gToast(res?.msg || '兑换失败'); return; }
+
+  userPearls = res.data.points_after;
+  syncPoints();
+  shopOrders.unshift({
+    id: res.data.order_id, gid: g.id, name: g.name,
+    pts: g.pts, emoji: g.emoji, img: g.img || '',
+    addr: `${addr.name} ${addr.phone} ${addr.region}${addr.detail}`,
+    time: new Date().toLocaleString(), status: 'pending', express: ''
+  });
+
+  document.getElementById('suc-order-info2').innerHTML = `
+    <div class="sor"><span class="sor-k">订单编号</span><span class="sor-v" style="font-size:11px;">${res.data.order_id}</span></div>
+    <div class="sor"><span class="sor-k">兑换商品</span><span class="sor-v">${g.name}</span></div>
+    <div class="sor"><span class="sor-k">消耗积分</span><span class="sor-v" style="color:#ff6b35;">${g.pts.toLocaleString()} 分</span></div>
+    <div class="sor"><span class="sor-k">剩余积分</span><span class="sor-v">${userPearls.toLocaleString()} 分</span></div>`;
+  document.querySelectorAll('#shop-view .shop-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('sp-success').classList.add('active');
+  shopPageStack = [];
+}
+
+// ── 游戏结算时调用 API（替换 onLand 里的结算逻辑）───
+// 在 onLand 函数末尾调用 settleBall(idx) 替代原来的本地计算
+
+
+// ══════════════════════════════════════════════════════
+// 全局状态（游戏和商城共享积分）
+// ══════════════════════════════════════════════════════
+let userPearls = 1000;  // 全局积分，游戏和商城共用
+
+function syncPoints(){
+  document.getElementById('sd').textContent = userPearls;
+  document.getElementById('pd').textContent = userPearls;
+  const sp=document.getElementById('shop-pts'); if(sp) sp.textContent=userPearls.toLocaleString();
+  const pp=document.getElementById('prof-pts'); if(pp) pp.textContent=userPearls.toLocaleString();
+  const pp2=document.getElementById('prof-pts2'); if(pp2) pp2.textContent=userPearls.toLocaleString();
+  const rc=document.getElementById('rc-current-pts'); if(rc) rc.textContent=userPearls.toLocaleString();
+  const cs=document.getElementById('cfg-cost-show'); if(cs) cs.textContent=COST_BASE;
+}
+
+// ══════════════════════════════════════════════════════
+// Tab 切换
+// ══════════════════════════════════════════════════════
+let currentTab = 'game';
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab-view').forEach(v=>{
+    v.classList.remove('active');
+  });
+  document.getElementById(tab+'-view').classList.add('active');
+  document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bn-'+tab).classList.add('active');
+  syncPoints();
+  if(tab==='shop'){ syncPoints(); renderGoods2(); }
+  if(tab==='profile'){
+    refreshPointsFromAPI(); // 切换时从后端拉最新积分
+    document.getElementById('prof-rounds').textContent = totalRounds||0;
+    document.getElementById('prof-rounds2').textContent = '共'+(totalRounds||0)+'局';
+    document.getElementById('prof-wins').textContent = (totalWins||0)+'次';
+    document.getElementById('prof-pts').textContent = userPearls.toLocaleString();
+    document.getElementById('prof-pts2').textContent = userPearls.toLocaleString();
+    document.getElementById('recharge-record-count').textContent =
+      (typeof rechargeRecords!=='undefined'?rechargeRecords.length:0)+'笔';
+    updateInviteStats();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// 全局 Toast / Sheet
+// ══════════════════════════════════════════════════════
+function gToast(msg){
+  const el=document.createElement('div');
+  el.className='g-toast'; el.textContent=msg;
+  document.getElementById('g-toast-wrap').appendChild(el);
+  setTimeout(()=>el.remove(),2000);
+}
+function showGSheet(title,html){
+  document.getElementById('gs-title').textContent=title;
+  document.getElementById('gs-body').innerHTML=html;
+  document.getElementById('g-sheet-overlay').classList.add('show');
+  document.getElementById('g-sheet').style.display='flex';
+  document.getElementById('g-sheet').style.flexDirection='column';
+}
+function closeGSheet(){
+  document.getElementById('g-sheet-overlay').classList.remove('show');
+  document.getElementById('g-sheet').style.display='none';
+}
+
+// ══════════════════════════════════════════════════════
+// 游戏逻辑（从 bozhu_v19 移植，pearls 改为 userPearls）
+// ══════════════════════════════════════════════════════
+const NUM_SLOTS=11;
+function loadGameConfig(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem('bzm_game_config')||'{}');
+    return {COST_BASE:cfg.costBase||5, MULT_W:cfg.multW||[35,28,20,12,5], WIN_SLOTS:cfg.winSlots||{2:5,4:4,6:3,8:2,10:1}};
+  }catch(e){return {COST_BASE:5,MULT_W:[35,28,20,12,5],WIN_SLOTS:{2:5,4:4,6:3,8:2,10:1}};}
+}
+let _cfg=loadGameConfig();
+let COST_BASE=_cfg.COST_BASE, MULT_W=[..._cfg.MULT_W], WIN_SLOTS={..._cfg.WIN_SLOTS};
+const MULTS=[2,4,6,8,10];
+window.addEventListener('storage',e=>{
+  if(e.key==='bzm_game_config'){
+    _cfg=loadGameConfig(); COST_BASE=_cfg.COST_BASE; MULT_W=[..._cfg.MULT_W]; WIN_SLOTS={..._cfg.WIN_SLOTS};
+    const tip=document.getElementById('cfg-sync-tip');
+    if(tip){tip.textContent='已同步';setTimeout(()=>tip.textContent='',3000);}
+  }
+});
+let totalRounds=0, totalWins=0;
+let phase='step1', currentMult=0, litSlots=new Set();
+let baseBet=COST_BASE, extraBet=0, totalBet=COST_BASE;
+let spinning=false, ballFired=false, ballLanded=false;
+let power=0, pressing=false, pressTimer=null;
+let activeBalls=[], floats=[];
+let launchState='waiting', ballDrawX=0, ballDrawY=0, riseSpeed=0;
+let arcProgress=0, arcDuration=20, arcCenterX=0, arcCenterY=0, arcRadius=0;
+let arcStartAngle=0, arcEndAngle=0;
+let straightProgress=0, straightDuration=0, straightStartX=0, straightEndX=0, straightY=0;
+let entryX=0, entryY=0;
+let TUBE_COL_W=36;
+
+const canvas=document.getElementById('gc'), cwrap=document.getElementById('cwrap'), ctx=canvas.getContext('2d');
+let CW=0, CH=0;
+
+function resize(){
+  CW=cwrap.clientWidth; CH=cwrap.clientHeight;
+  canvas.width=CW; canvas.height=CH;
+  buildWorld();
+}
+
+
+const {Engine,Bodies,Body,World,Events}=Matter;
+const engine=Engine.create({gravity:{y:0.28}}), world=engine.world;
+const pegPos=[];
+function buildWorld(){
+  if(!CW||!CH)return;
+  World.clear(world); Engine.clear(engine); activeBalls=[]; pegPos.length=0;
+  const ROWS=12,slotW=CW/NUM_SLOTS,pegTop=CH*0.05,pegBot=CH-20-CH*0.04;
+  const spacingY=(pegBot-pegTop)/ROWS, spacingX=CW/(ROWS+1), PEG_R=Math.max(3.5,Math.min(5,CW*0.011));
+  for(let r=0;r<ROWS;r++){
+    const even=r%2===0,cols=even?ROWS:ROWS-1,startX=even?spacingX:spacingX*1.5;
+    for(let c=0;c<cols;c++){
+      const x=startX+c*spacingX,y=pegTop+r*spacingY;
+      pegPos.push({x,y,r:PEG_R});
+      World.add(world,Bodies.circle(x,y,PEG_R,{isStatic:true,restitution:0.44,friction:0.01,collisionFilter:{category:2,mask:1},label:'peg'}));
+    }
+  }
+  const wo={isStatic:true,friction:0,restitution:0.2,collisionFilter:{category:2,mask:1}};
+  World.add(world,[Bodies.rectangle(-6,CH/2,12,CH*2,wo),Bodies.rectangle(CW+6,CH/2,12,CH*2,wo)]);
+  for(let i=1;i<NUM_SLOTS;i++) World.add(world,Bodies.rectangle(i*(CW/NUM_SLOTS),CH-12,2,24,{isStatic:true,friction:0,restitution:0.04,collisionFilter:{category:2,mask:1}}));
+  for(let i=0;i<NUM_SLOTS;i++) World.add(world,Bodies.rectangle(i*(CW/NUM_SLOTS)+(CW/NUM_SLOTS)/2,CH-5,(CW/NUM_SLOTS)-3,10,{isStatic:true,isSensor:true,collisionFilter:{category:4,mask:1},label:'slot_'+i}));
+  Events.on(engine,'collisionStart',ev=>{
+    ev.pairs.forEach(({bodyA,bodyB})=>{
+      const ball=[bodyA,bodyB].find(b=>b.label==='ball');
+      const peg=[bodyA,bodyB].find(b=>b.label==='peg');
+      const sen=[bodyA,bodyB].find(b=>b.label&&b.label.startsWith('slot_'));
+      // 碰钉特效（限频，不要每帧都触发）
+      if(ball&&peg&&!ball._lastPegSound){
+        ball._lastPegSound=true;
+        playSound('peg');
+        spawnParticles(ball.position.x,ball.position.y,'peg');
+        setTimeout(()=>{if(ball)ball._lastPegSound=false;},80);
+      }
+      if(ball&&sen&&!ball._done){ball._done=true;onLand(ball,parseInt(sen.label.split('_')[1]));}
+    });
+  });
+  buildSlotUI(); if(currentMult)setLit(currentMult);
+}
+function buildSlotUI(){
+  const d=document.getElementById('slotsrow'); d.innerHTML='';
+  for(let i=0;i<NUM_SLOTS;i++){
+    const s=document.createElement('div');
+    s.className='slot';
+    s.id='sl'+i;
+    if(i===NUM_SLOTS-1){
+      // 最右边是发射槽
+      s.textContent='↺';
+      s.style.background='rgba(100,100,100,0.3)';
+      s.style.color='rgba(255,255,255,0.3)';
+      s.title='发射回收槽';
+    } else {
+      s.textContent='—';
+    }
+    d.appendChild(s);
+  }
+}
+function setLit(mult){
+  litSlots.clear();
+  const count=WIN_SLOTS[mult]||Math.max(1,6-Math.floor(mult/2));
+  // 只在前 NUM_SLOTS-1 个槽里随机亮槽（最右边是回收槽，排除）
+  const available=[...Array(NUM_SLOTS-1).keys()];
+  available.sort(()=>Math.random()-0.5).slice(0,count).forEach(i=>litSlots.add(i));
+  for(let i=0;i<NUM_SLOTS;i++){
+    const el=document.getElementById('sl'+i);
+    if(!el) continue;
+    if(i===NUM_SLOTS-1){
+      // 回收槽保持固定样式
+      el.className='slot';
+      el.textContent='↺';
+      el.style.background='rgba(100,100,100,0.3)';
+      el.style.color='rgba(255,255,255,0.3)';
+    } else {
+      el.className='slot'+(litSlots.has(i)?' lit':'');
+      el.textContent=mult+'x';
+      el.style.background='';
+      el.style.color='';
+    }
+  }
+}
+function onLand(ball,idx){
+  if(ballLanded)return;
+  // 最右侧槽(idx=NUM_SLOTS-1)是发射槽/回收槽
+  if(idx===NUM_SLOTS-1){
+    // 珠子回收，免费再射一次
+    setTimeout(()=>{try{World.remove(world,ball);}catch(e){}activeBalls=activeBalls.filter(b=>b!==ball);},400);
+    setTimeout(()=>{
+      ballFired=false; ballLanded=false; launchState='waiting';
+      const fb=document.getElementById('firebtn');
+      fb.classList.remove('off');
+      setTip('⚡ 蓄力太小没弹出！免费再射一次，多蓄点力～');
+      showAnnounce('再射一次！');
+    },500);
+    return;
+  }
+  ballLanded=true;
+  const won=litSlots.has(idx)?totalBet*currentMult:0;
+  if(won>0){
+    userPearls+=won;totalWins++;
+    const el=document.getElementById('sl'+idx);
+    if(el){el.classList.add('wf');setTimeout(()=>el.classList.remove('wf'),500);}
+    floats.push({x:ball.position.x,y:ball.position.y,text:'+'+won,life:100,vy:-1.2,color:'#ffe840'});
+    // 中奖特效
+    spawnParticles(ball.position.x,ball.position.y,'win');
+    triggerShake(5,10);
+    triggerFlash('rgba(255,220,0,0.25)');
+    showWinBanner(won,currentMult);
+    playSound('win');
+  } else {
+    floats.push({x:ball.position.x,y:ball.position.y,text:'未中',life:70,vy:-1,color:'#ff8866'});
+    spawnParticles(ball.position.x,ball.position.y,'miss');
+    playSound('miss');
+  }
+  syncPoints();
+  setTimeout(()=>{try{World.remove(world,ball);}catch(e){}activeBalls=activeBalls.filter(b=>b!==ball);},900);
+  setTimeout(()=>showResult(won),1400);
+}
+function updateS3(){
+  document.getElementById('nb').textContent=totalBet;
+  document.getElementById('nm').textContent=currentMult;
+  document.getElementById('nw').textContent=totalBet*currentMult;
+  document.getElementById('jze').textContent=extraBet;
+  document.getElementById('jzt').textContent=totalBet;
+}
+function doSkip(){goPhase('step4');}
+function doGoShoot(){goPhase('step4');}
+function showResult(won){
+  totalRounds++;
+  const net=won-totalBet;
+  document.getElementById('rico').textContent=won>0?'🎉':'😔';
+  document.getElementById('rtitle').textContent=won>0?'恭喜中奖！':'本局未中奖';
+  document.getElementById('rdetail').innerHTML='赌注 <b>'+totalBet+'</b>　倍率 <b>'+currentMult+'x</b><br>'+(won>0?'获得 <b class="pos">+'+won+'</b>':'未落亮槽')+'　净收益 <b class="'+(net>=0?'pos':'neg')+'">'+(net>=0?'+':'')+net+'</b>';
+  syncPoints();
+  // 保存积分到用户数据
+  saveUserPoints();
+  goPhase('result');
+}
+function nextRound(){
+  extraBet=0;totalBet=COST_BASE;currentMult=0;launchState='waiting';
+  document.getElementById('mtv').textContent='?';
+  document.querySelectorAll('.ms').forEach(el=>el.className='ms');
+  for(let i=0;i<NUM_SLOTS;i++){
+    const el=document.getElementById('sl'+i);
+    if(!el) continue;
+    if(i===NUM_SLOTS-1){
+      el.className='slot'; el.textContent='↺';
+      el.style.background='rgba(100,100,100,0.3)';
+      el.style.color='rgba(255,255,255,0.3)';
+    } else {
+      el.className='slot'; el.textContent='—';
+      el.style.background=''; el.style.color='';
+    }
+  }
+  litSlots.clear();setPow(0);goPhase('step1');
+}
+function goPhase(p){
+  phase=p;
+  ['s1','s2','s3','s4','s5'].forEach(id=>document.getElementById(id).style.display='none');
+  const order=['step1','step2','step3','step4','result'],idx=order.indexOf(p);
+  ['stp1','stp2','stp3','stp4'].forEach((id,i)=>{document.getElementById(id).className='stp'+(i===idx?' cur':i<idx?' done':'');});
+  const fb=document.getElementById('firebtn');
+  if(p==='step1'){
+    document.getElementById('s1').style.display='block';fb.classList.add('off');
+    document.getElementById('buy-cost-show').textContent=COST_BASE;
+    document.getElementById('s1-cost').textContent=COST_BASE;
+    const bcs=document.getElementById('cfg-cost-show');if(bcs)bcs.textContent=COST_BASE;
+  }
+  else if(p==='step2'){document.getElementById('s2').style.display='block';document.getElementById('btn-confirm').disabled=false;fb.classList.add('off');}
+  else if(p==='step3'){document.getElementById('s3').style.display='block';updateS3();fb.classList.add('off');}
+  else if(p==='step4'){
+    document.getElementById('s4').style.display='block';
+    const cm=WIN_SLOTS;
+    document.getElementById('s4b').textContent=totalBet+' 积分';
+    document.getElementById('s4m').textContent=currentMult+'x';
+    document.getElementById('s4w').textContent=(totalBet*currentMult)+' 积分';
+    document.getElementById('s4l').textContent=(cm[currentMult]||'?')+' / '+NUM_SLOTS;
+    fb.classList.remove('off'); launchState='waiting';
+  }
+  else if(p==='result'){document.getElementById('s5').style.display='block';fb.classList.add('off');}
+}
+const firebtn=document.getElementById('firebtn');
+let pressStart=0;
+function startPress(e){
+  e.preventDefault();if(phase!=='step4'){setTip('请先完成前面步骤');return;}if(ballFired){setTip('本局已发射');return;}
+  pressing=true;power=0;setPow(0);pressStart=Date.now();firebtn.classList.add('pressing');
+  let _chargeBeep=0;
+  pressTimer=setInterval(()=>{
+    setPow(Math.min(100,(Date.now()-pressStart)/1000*80));
+    _chargeBeep++;
+    if(_chargeBeep%8===0) playSound('charge');
+  },25);
+}
+function endPress(e){
+  if(e)e.preventDefault();if(!pressing)return;pressing=false;clearInterval(pressTimer);
+  firebtn.classList.remove('pressing');if(power>2){ballFired=true;firebtn.classList.add('off');doLaunch();}
+  setTimeout(()=>setPow(0),300);
+}
+firebtn.addEventListener('mousedown',startPress);firebtn.addEventListener('touchstart',startPress,{passive:false});
+firebtn.addEventListener('mouseup',endPress);firebtn.addEventListener('touchend',endPress,{passive:false});
+document.addEventListener('mouseup',()=>{if(pressing)endPress(null);});document.addEventListener('touchend',()=>{if(pressing)endPress(null);});
+function setPow(p){
+  power=Math.max(0,Math.min(100,p));
+  document.getElementById('vtube-fill').style.height=power+'%';
+  document.getElementById('pval').textContent=Math.round(power)+'%';
+}
+function doLaunch(){
+  launchState='rising'; ballDrawX=CW-8; ballDrawY=CH*0.85; riseSpeed=3.5+power*0.025;
+  playSound('launch');
+  // 入射X：蓄力大→偏左，小→偏右，但加入大量随机扰动
+  // 让物理碰撞主导最终落点，蓄力只影响大致区域
+  const baseX = CW*(0.88-(power/100)*0.55);
+  const randomOffset = (Math.random()-0.5)*CW*0.35; // 大范围随机扰动
+  entryX = Math.max(CW*0.05, Math.min(CW*0.95, baseX+randomOffset));
+  entryY=CH*0.04;
+}
+function updateLaunch(){
+  if(launchState==='rising'){
+    ballDrawY-=riseSpeed; ballDrawX=CW-8;
+    if(ballDrawY<=CH*0.06){
+      launchState='arcing'; arcProgress=0;
+      arcRadius=CW*0.07+power*0.3; arcCenterX=ballDrawX-arcRadius; arcCenterY=ballDrawY;
+      arcStartAngle=0; arcEndAngle=-Math.PI/2; arcDuration=18;
+    }
+  } else if(launchState==='arcing'){
+    arcProgress+=1/arcDuration; if(arcProgress>=1)arcProgress=1;
+    const angle=arcStartAngle+(arcEndAngle-arcStartAngle)*arcProgress;
+    ballDrawX=arcCenterX+arcRadius*Math.cos(angle); ballDrawY=arcCenterY+arcRadius*Math.sin(angle);
+    if(arcProgress>=1){
+      launchState='straight'; straightProgress=0; straightY=ballDrawY;
+      straightStartX=ballDrawX; straightEndX=entryX;
+      const dist=Math.abs(straightStartX-straightEndX);
+      straightDuration=Math.max(10,Math.round(dist/riseSpeed));
+    }
+  } else if(launchState==='straight'){
+    straightProgress+=1/straightDuration; if(straightProgress>=1)straightProgress=1;
+    ballDrawX=straightStartX+(straightEndX-straightStartX)*straightProgress; ballDrawY=straightY;
+    if(straightProgress>=1){launchState='entered';spawnBall(ballDrawX,ballDrawY+4);}
+  }
+}
+function spawnBall(x,y){
+  const BR=Math.max(6,Math.min(8,CW*0.022));
+  const ball=Bodies.circle(x,y,BR,{restitution:0.40,friction:0.02,frictionAir:0.010,label:'ball',_done:false,collisionFilter:{category:1,mask:6},density:0.003});
+  // 入场速度完全随机化，不让玩家通过蓄力预判落槽
+  const vx = -0.3 + (Math.random()-0.5)*1.8;
+  const vy = 0.6 + Math.random()*0.8;
+  Body.setVelocity(ball,{x:vx,y:vy});
+  World.add(world,ball);activeBalls.push(ball);
+}
+function gameLoop(){
+  updateLaunch(); Engine.update(engine,16.67);
+  activeBalls.forEach(b=>{if((b.position.y>CH+60||b.position.x<-80||b.position.x>CW+80)&&!b._done){b._done=true;try{World.remove(world,b);}catch(e){}activeBalls=activeBalls.filter(x=>x!==b);if(!ballLanded){ballLanded=true;setTimeout(()=>showResult(0),400);}}});
+  drawGame(); requestAnimationFrame(gameLoop);
+}
+function drawGame(){
+  ctx.save();
+  ctx.clearRect(0,0,CW,CH);
+  // 震动效果
+  applyShake();
+  const bg=ctx.createLinearGradient(0,0,0,CH);bg.addColorStop(0,'#fffbea');bg.addColorStop(0.5,'#fff0a0');bg.addColorStop(1,'#ffe060');ctx.fillStyle=bg;ctx.fillRect(0,0,CW,CH);
+  // 内框装饰线
+  ctx.strokeStyle='rgba(220,160,0,0.15)';ctx.lineWidth=1;
+  ctx.strokeRect(4,4,CW-8,CH-8);
+  const slotW=CW/NUM_SLOTS;
+  litSlots.forEach(i=>{ctx.fillStyle='rgba(255,60,0,0.06)';ctx.fillRect(i*slotW,0,slotW,CH-20);});
+  pegPos.forEach(p=>{
+    const r=p.r;
+    ctx.beginPath();ctx.arc(p.x+1,p.y+1.5,r,0,Math.PI*2);ctx.fillStyle='rgba(160,90,0,0.18)';ctx.fill();
+    const pg=ctx.createRadialGradient(p.x-r*0.3,p.y-r*0.4,r*0.1,p.x,p.y,r);
+    pg.addColorStop(0,'#ffe060');pg.addColorStop(0.55,'#e8a010');pg.addColorStop(1,'#c07000');
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=pg;ctx.fill();
+    ctx.strokeStyle='rgba(190,120,0,0.5)';ctx.lineWidth=0.7;ctx.stroke();
+    ctx.beginPath();ctx.ellipse(p.x-r*0.25,p.y-r*0.28,r*0.28,r*0.2,-0.3,0,Math.PI*2);ctx.fillStyle='rgba(255,255,200,0.52)';ctx.fill();
+    ctx.fillStyle='rgba(190,120,0,0.4)';ctx.fillRect(p.x-r*0.22,p.y+r*0.75,r*0.44,r*0.55);
+  });
+  for(let i=1;i<NUM_SLOTS;i++){ctx.fillStyle='rgba(180,100,0,0.4)';ctx.fillRect(i*slotW-1,CH-22,2,22);}
+  const BR=Math.max(6,Math.min(8,CW*0.022));
+  if(launchState==='rising'||launchState==='arcing'||launchState==='straight'){
+    const bx=ballDrawX,by=ballDrawY,pulse=0.5+0.5*Math.sin(Date.now()/150);
+    if(launchState==='arcing'||launchState==='straight'){
+      ctx.save();ctx.strokeStyle='rgba(255,210,80,0.3)';ctx.lineWidth=BR*1.5;ctx.lineCap='round';ctx.beginPath();
+      if(launchState==='arcing')ctx.arc(arcCenterX,arcCenterY,arcRadius,arcStartAngle,arcStartAngle+(arcEndAngle-arcStartAngle)*arcProgress,arcEndAngle<arcStartAngle);
+      else{ctx.moveTo(straightStartX,straightY);ctx.lineTo(bx,by);}
+      ctx.stroke();ctx.restore();
+    }
+    ctx.beginPath();ctx.arc(bx,by,BR+4+pulse*3,0,Math.PI*2);ctx.fillStyle='rgba(255,180,0,'+(0.15+pulse*0.12)+')';ctx.fill();
+    ctx.beginPath();ctx.arc(bx+2,by+2,BR,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,0.16)';ctx.fill();
+    drawBallAt(bx,by,BR);
+  }
+  if(phase==='step4'&&!ballFired&&launchState==='waiting'){
+    const bx=CW-BR-2,by=CH*0.85,pulse=0.5+0.5*Math.sin(Date.now()/300);
+    ctx.beginPath();ctx.arc(bx,by,BR+5+pulse*3,0,Math.PI*2);ctx.fillStyle='rgba(255,200,0,'+(0.18+pulse*0.18)+')';ctx.fill();
+    ctx.beginPath();ctx.arc(bx+2,by+2,BR,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fill();
+    drawBallAt(bx,by,BR);
+  }
+  activeBalls.forEach(b=>{
+    const p=b.position;
+    ctx.beginPath();ctx.arc(p.x+2,p.y+2.5,BR,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fill();
+    drawBallAt(p.x,p.y,BR);
+  });
+  for(let i=floats.length-1;i>=0;i--){
+    const f=floats[i];f.y+=f.vy;f.life--;if(f.life<=0){floats.splice(i,1);continue;}
+    ctx.globalAlpha=Math.min(1,f.life/55);ctx.font='bold 16px sans-serif';ctx.textAlign='center';
+    ctx.strokeStyle='rgba(255,240,160,0.8)';ctx.lineWidth=3;ctx.strokeText(f.text,f.x,f.y);ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);ctx.globalAlpha=1;
+  }
+}
+function drawBallAt(x,y,r){
+  const g=ctx.createRadialGradient(x-r*0.35,y-r*0.35,r*0.05,x,y,r);
+  g.addColorStop(0,'#ffffff');g.addColorStop(0.3,'#f0f0ff');g.addColorStop(0.7,'#c0c0d8');g.addColorStop(1,'#9090b0');
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle='rgba(160,160,200,0.4)';ctx.lineWidth=0.8;ctx.stroke();
+}
+function setTip(t){const el=document.getElementById('tip');el.textContent=t;if(t)setTimeout(()=>{if(el.textContent===t)el.textContent='';},2500);}
+function showAnnounce(txt){const el=document.getElementById('announce');el.textContent=txt;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',1500);}
+function openGame(){
+  if(!currentUser){ gToast('请先登录'); return; }
+  document.getElementById('overlay').classList.add('hidden');
+}
+
+
+// ══════════════════════════════════════════════════════
+// 音效系统（Web Audio API 合成音，无需音频文件）
+// ══════════════════════════════════════════════════════
+let audioCtx = null;
+let soundEnabled = true;
+
+function getAudioCtx(){
+  if(!audioCtx){ try{ audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  return audioCtx;
+}
+
+function playSound(type){
+  if(!soundEnabled) return;
+  const ctx=getAudioCtx(); if(!ctx) return;
+  const now=ctx.currentTime;
+  const osc=ctx.createOscillator();
+  const gain=ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+
+  switch(type){
+    case 'launch': // 发射音：短促上扬
+      osc.type='sine';
+      osc.frequency.setValueAtTime(300,now);
+      osc.frequency.exponentialRampToValueAtTime(800,now+0.12);
+      gain.gain.setValueAtTime(0.3,now);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+0.15);
+      osc.start(now); osc.stop(now+0.15);
+      break;
+    case 'peg': // 碰钉音：轻微弹击
+      osc.type='triangle';
+      osc.frequency.setValueAtTime(600+Math.random()*200,now);
+      osc.frequency.exponentialRampToValueAtTime(200,now+0.06);
+      gain.gain.setValueAtTime(0.15,now);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+0.08);
+      osc.start(now); osc.stop(now+0.08);
+      break;
+    case 'win': // 中奖音：欢快上扬
+      const notes=[523,659,784,1047];
+      notes.forEach((freq,i)=>{
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type='sine';
+        const t=now+i*0.1;
+        o.frequency.setValueAtTime(freq,t);
+        g.gain.setValueAtTime(0.25,t);
+        g.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+        o.start(t); o.stop(t+0.2);
+      });
+      break;
+    case 'miss': // 未中音：低沉下降
+      osc.type='sawtooth';
+      osc.frequency.setValueAtTime(300,now);
+      osc.frequency.exponentialRampToValueAtTime(150,now+0.3);
+      gain.gain.setValueAtTime(0.15,now);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+0.3);
+      osc.start(now); osc.stop(now+0.3);
+      break;
+    case 'spin': // 转盘音：快速点击
+      osc.type='square';
+      osc.frequency.setValueAtTime(440,now);
+      gain.gain.setValueAtTime(0.08,now);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+0.05);
+      osc.start(now); osc.stop(now+0.05);
+      break;
+    case 'charge': // 蓄力音：随power变化
+      osc.type='sine';
+      osc.frequency.setValueAtTime(200+power*4,now);
+      gain.gain.setValueAtTime(0.05,now);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+0.08);
+      osc.start(now); osc.stop(now+0.08);
+      break;
+    case 'btn': // 按钮点击
+      osc.type='sine';
+      osc.frequency.setValueAtTime(800,now);
+      gain.gain.setValueAtTime(0.1,now);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+0.08);
+      osc.start(now); osc.stop(now+0.08);
+      break;
+  }
+}
+
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+  const btn=document.getElementById('sound-btn');
+  if(btn) btn.textContent=soundEnabled?'🔊':'🔇';
+  gToast(soundEnabled?'音效已开启':'音效已关闭');
+}
+
+// ══════════════════════════════════════════════════════
+// 粒子特效系统
+// ══════════════════════════════════════════════════════
+const particles = [];
+
+function spawnParticles(x, y, type){
+  const configs = {
+    win: { count:18, colors:['#ffe840','#ff9800','#ff4500','#fff'], speed:3.5, life:80, size:5 },
+    miss:{ count:6,  colors:['#888','#aaa'], speed:1.5, life:40, size:3 },
+    peg: { count:3,  colors:['#ffd060','#ffaa00'], speed:2, life:25, size:2.5 },
+  };
+  const cfg=configs[type]||configs.peg;
+  for(let i=0;i<cfg.count;i++){
+    const angle=Math.random()*Math.PI*2;
+    const spd=cfg.speed*(0.5+Math.random());
+    particles.push({
+      x, y,
+      vx: Math.cos(angle)*spd,
+      vy: Math.sin(angle)*spd - (type==='win'?2:0),
+      life: cfg.life, maxLife: cfg.life,
+      color: cfg.colors[Math.floor(Math.random()*cfg.colors.length)],
+      size: cfg.size*(0.5+Math.random()),
+      gravity: 0.12,
+      type,
+    });
+  }
+}
+
+function updateParticles(){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=p.gravity;
+    p.vx*=0.95; p.life--;
+    if(p.life<=0) particles.splice(i,1);
+  }
+}
+
+function drawParticles(){
+  particles.forEach(p=>{
+    const alpha=p.life/p.maxLife;
+    ctx.save();
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle=p.color;
+    if(p.type==='win'){
+      // 星形粒子
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fill();
+      // 拖尾
+      ctx.fillStyle='rgba(255,255,255,'+alpha*0.5+')';
+      ctx.beginPath();
+      ctx.arc(p.x-p.vx*0.5,p.y-p.vy*0.5,p.size*0.5,0,Math.PI*2);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// 屏幕震动 & 闪光效果
+// ══════════════════════════════════════════════════════
+let shakeFrames=0, shakeIntensity=0;
+let flashAlpha=0;
+
+function triggerShake(intensity=4, frames=8){
+  shakeIntensity=intensity; shakeFrames=frames;
+}
+function triggerFlash(color='rgba(255,220,0,0.3)'){
+  flashAlpha=0.6;
+  window._flashColor=color;
+}
+
+function applyShake(){
+  if(shakeFrames<=0) return;
+  const dx=(Math.random()-0.5)*shakeIntensity*2;
+  const dy=(Math.random()-0.5)*shakeIntensity*2;
+  ctx.translate(dx,dy);
+  shakeFrames--;
+  if(shakeFrames<=0) shakeIntensity=0;
+}
+
+function drawFlash(){
+  if(flashAlpha<=0) return;
+  ctx.save();
+  ctx.fillStyle=window._flashColor||'rgba(255,220,0,0.3)';
+  ctx.globalAlpha=flashAlpha;
+  ctx.fillRect(0,0,CW,CH);
+  ctx.restore();
+  flashAlpha-=0.04;
+  if(flashAlpha<0) flashAlpha=0;
+}
+
+// ══════════════════════════════════════════════════════
+// 中奖横幅动画
+// ══════════════════════════════════════════════════════
+let winBanner = null;
+
+function showWinBanner(amount, mult){
+  winBanner = {
+    alpha: 0, scale: 0.3,
+    targetAlpha: 1, targetScale: 1,
+    life: 120,
+    amount, mult,
+    phase: 'in', // in | hold | out
+    holdFrames: 60,
+  };
+}
+
+function drawWinBanner(){
+  if(!winBanner) return;
+  const b=winBanner;
+  // ease in
+  if(b.phase==='in'){
+    b.alpha=Math.min(1,b.alpha+0.12);
+    b.scale=Math.min(1,b.scale+0.1);
+    if(b.alpha>=1&&b.scale>=1){ b.phase='hold'; }
+  } else if(b.phase==='hold'){
+    b.holdFrames--;
+    if(b.holdFrames<=0) b.phase='out';
+  } else {
+    b.alpha=Math.max(0,b.alpha-0.06);
+    if(b.alpha<=0){ winBanner=null; return; }
+  }
+  ctx.save();
+  ctx.globalAlpha=b.alpha;
+  const cx2=CW/2, cy2=CH*0.35;
+  ctx.translate(cx2,cy2);
+  ctx.scale(b.scale,b.scale);
+  // 背景板
+  const bw=180, bh=64;
+  ctx.shadowColor='rgba(255,180,0,0.6)';
+  ctx.shadowBlur=20;
+  const grad=ctx.createLinearGradient(-bw/2,-bh/2,bw/2,bh/2);
+  grad.addColorStop(0,'rgba(80,20,0,0.92)');
+  grad.addColorStop(0.5,'rgba(140,50,0,0.95)');
+  grad.addColorStop(1,'rgba(80,20,0,0.92)');
+  ctx.fillStyle=grad;
+  roundRect(ctx,-bw/2,-bh/2,bw,bh,14);
+  ctx.fill();
+  // 边框
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='#ffe840';
+  ctx.lineWidth=2.5;
+  roundRect(ctx,-bw/2,-bh/2,bw,bh,14);
+  ctx.stroke();
+  // 文字
+  ctx.fillStyle='#ffe840';
+  ctx.font='bold 13px PingFang SC, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('🎉 恭喜中奖！', 0, -14);
+  ctx.fillStyle='#fff';
+  ctx.font='bold 22px PingFang SC, sans-serif';
+  ctx.fillText('+'+b.amount+' 积分', 0, 14);
+  ctx.fillStyle='rgba(255,200,80,0.7)';
+  ctx.font='11px PingFang SC, sans-serif';
+  ctx.fillText(b.mult+'x 倍率', 0, 32);
+  ctx.restore();
+}
+
+function roundRect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.lineTo(x+w-r,y); c.arcTo(x+w,y,x+w,y+r,r);
+  c.lineTo(x+w,y+h-r); c.arcTo(x+w,y+h,x+w-r,y+h,r);
+  c.lineTo(x+r,y+h); c.arcTo(x,y+h,x,y+h-r,r);
+  c.lineTo(x,y+r); c.arcTo(x,y,x+r,y,r);
+  c.closePath();
+}
+
+// ══════════════════════════════════════════════════════
+// 蓄力视觉增强
+// ══════════════════════════════════════════════════════
+function drawChargeEffect(){
+  if(!pressing || phase!=='step4') return;
+  // 右侧管道内蓄力光晕
+  const bx=CW-8, by=ballDrawY>0?ballDrawY:CH*0.85;
+  const BR=Math.max(6,Math.min(8,CW*0.022));
+  const intensity=power/100;
+  // 外圈光晕（随蓄力变大）
+  const gradient=ctx.createRadialGradient(bx,by,0,bx,by,BR*3+intensity*12);
+  gradient.addColorStop(0,'rgba(255,'+(150+intensity*100)+',0,'+(0.4*intensity)+')');
+  gradient.addColorStop(1,'rgba(255,100,0,0)');
+  ctx.beginPath();
+  ctx.arc(bx,by,BR*3+intensity*12,0,Math.PI*2);
+  ctx.fillStyle=gradient;
+  ctx.fill();
+  // 蓄力条右侧能量线
+  if(power>20){
+    ctx.save();
+    ctx.strokeStyle='rgba(255,'+(150+intensity*105)+',0,'+(0.3+intensity*0.4)+')';
+    ctx.lineWidth=2;
+    ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    ctx.moveTo(bx,by);
+    ctx.lineTo(bx,by-power*1.2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// 商城逻辑
+// ══════════════════════════════════════════════════════
+const goodsData=[
+  {id:'G001',name:'索尼蓝牙耳机',pts:5000,stock:28,sold:42,emoji:'🎧',cat:'digital',tags:['数码','音频'],desc:'索尼高音质蓝牙耳机，30小时续航，主动降噪。',badge:'hot',img:''},
+  {id:'G002',name:'乐高积木套装',pts:8000,stock:15,sold:18,emoji:'🧩',cat:'life',tags:['玩具','益智'],desc:'经典创意积木套装，500+颗粒，适合8岁以上。',badge:'new',img:''},
+  {id:'G003',name:'316保温杯',pts:2000,stock:3,sold:88,emoji:'☕',cat:'life',tags:['生活','实用'],desc:'316不锈钢保温杯500ml，12小时保温。',badge:'hot',img:''},
+  {id:'G004',name:'小米手环8',pts:12000,stock:10,sold:6,emoji:'⌚',cat:'digital',tags:['数码','健康'],desc:'智能运动手环，心率血氧，14天续航。',badge:'new',img:''},
+  {id:'G005',name:'星巴克券×3',pts:1500,stock:100,sold:156,emoji:'☕',cat:'food',tags:['美食','通用'],desc:'星巴克标准饮品兑换券3张，全国通用。',badge:'hot',img:''},
+  {id:'G006',name:'京东卡50元',pts:4500,stock:50,sold:34,emoji:'🛒',cat:'life',tags:['购物','实用'],desc:'京东e卡50元，全品类可用。',badge:'',img:''},
+  {id:'G007',name:'无线充电板',pts:3000,stock:20,sold:25,emoji:'🔋',cat:'digital',tags:['数码','充电'],desc:'15W快速无线充电，兼容iPhone/Android。',badge:'new',img:''},
+  {id:'G008',name:'有机零食礼盒',pts:2500,stock:8,sold:45,emoji:'🍪',cat:'food',tags:['美食','健康'],desc:'精选有机坚果礼盒，8种口味。',badge:'hot',img:''},
+];
+let addresses=[
+  {id:'A001',name:'张三',phone:'138****8001',region:'广东省 广州市 天河区',detail:'天河路88号1801室',isDefault:true},
+  {id:'A002',name:'张三（公司）',phone:'138****8001',region:'广东省 广州市 越秀区',detail:'东风中路123号5楼',isDefault:false},
+];
+let shopOrders=[
+  {id:'O20240115001',gid:'G003',name:'316保温杯',pts:2000,emoji:'☕',img:'',addr:'张三 138**** 广东广州天河区',time:'2024-01-15 14:05',status:'pending',express:''},
+  {id:'O20240114001',gid:'G005',name:'星巴克券×3',pts:1500,emoji:'☕',img:'',addr:'张三 138**** 广东广州天河区',time:'2024-01-14 11:30',status:'shipped',express:'顺丰 SF1234567890'},
+];
+let currentGoods2=null, selectedAddrId2=addresses.find(a=>a.isDefault)?.id||null;
+let shopPageStack=[];
+
+function shopGoto(pid){
+  shopPageStack.push(document.querySelector('#shop-view .shop-page.active')?.id||'sp-home');
+  document.querySelectorAll('#shop-view .shop-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(pid).classList.add('active');
+}
+function shopBack(){
+  const prev=shopPageStack.pop()||'sp-home';
+  document.querySelectorAll('#shop-view .shop-page').forEach(p=>p.classList.remove('active'));
+  const el=document.getElementById(prev);
+  if(el) el.classList.add('active');
+  else document.getElementById('sp-home').classList.add('active');
+}
+
+function renderGoods2(cat='all'){
+  syncPoints();
+  const list=cat==='all'?goodsData:cat==='hot'?goodsData.filter(g=>g.badge==='hot'):cat==='new'?goodsData.filter(g=>g.badge==='new'):goodsData.filter(g=>g.cat===cat);
+  const grid=document.getElementById('goods-grid2');
+  grid.innerHTML=list.map(g=>`<div class="goods-card" onclick="gotoDetail2('${g.id}')">
+    <div class="gc-img">${g.img?`<img src="${g.img}">`:`<span>${g.emoji}</span>`}${g.badge?`<span class="gc-badge ${g.badge}">${g.badge==='hot'?'热门':'新品'}</span>`:''}</div>
+    <div class="gc-info">
+      <div class="gc-name">${g.name}</div>
+      <div class="gc-desc-txt">${g.desc}</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+        <div class="gc-pts">🪙 ${g.pts.toLocaleString()}<span class="gc-pts-unit"> 积分</span></div>
+      </div>
+      <div class="gc-stock-txt">库存${g.stock}</div>
+      <button class="gc-exbtn" ${g.stock===0||userPearls<g.pts?'disabled':''} onclick="event.stopPropagation();gotoDetail2('${g.id}')">
+        ${g.stock===0?'已售罄':userPearls<g.pts?'积分不足':'立即兑换'}
+      </button>
+    </div></div>`).join('');
+}
+
+function filterGoods2(cat,el){
+  document.querySelectorAll('#shop-cat-tabs .stab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); renderGoods2(cat);
+}
+
+function gotoDetail2(id){
+  currentGoods2=goodsData.find(g=>g.id===id); if(!currentGoods2)return;
+  shopPageStack=['sp-home'];
+  const g=currentGoods2;
+  document.getElementById('sp-detail-title').textContent=g.name;
+  const imgEl=document.getElementById('sp-detail-img');
+  imgEl.innerHTML=g.img?`<img src="${g.img}">`:`<span style="font-size:72px;">${g.emoji}</span>`;
+  document.getElementById('sp-detail-name').textContent=g.name;
+  document.getElementById('sp-detail-pts').textContent=g.pts.toLocaleString();
+  document.getElementById('sp-footer-pts').textContent=g.pts.toLocaleString();
+  document.getElementById('sp-detail-stock').textContent=`库存：${g.stock}件 · 已兑换${g.sold}件`;
+  document.getElementById('sp-detail-desc').textContent=g.desc;
+  document.getElementById('sp-detail-tags').innerHTML=g.tags.map(t=>`<span class="db-tag">${t}</span>`).join('');
+  const btn=document.getElementById('sp-ex-btn');
+  if(g.stock===0){btn.textContent='已售罄';btn.disabled=true;}
+  else if(userPearls<g.pts){btn.textContent='积分不足';btn.disabled=true;}
+  else{btn.textContent='立即兑换';btn.disabled=false;}
+  document.querySelectorAll('#shop-view .shop-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('sp-detail').classList.add('active');
+}
+
+function renderAddrList2(){
+  const list=document.getElementById('addr-list2');
+  list.innerHTML=addresses.map(a=>`<div class="addr-card ${a.id===selectedAddrId2?'sel':''}" onclick="selectAddr2('${a.id}')">
+    <div class="ac-check">${a.id===selectedAddrId2?'✓':''}</div>
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+      <span class="ac-name">${a.name}</span><span class="ac-phone">${a.phone}</span>
+      ${a.isDefault?'<span class="ac-default-tag">默认</span>':''}
+    </div>
+    <div class="ac-region">${a.region} ${a.detail}</div>
+  </div>`).join('');
+  list.innerHTML+=`<div class="add-addr-card" onclick="shopGoto('sp-add-addr')">＋ 新增收货地址</div>`;
+  document.getElementById('addr-confirm-btn2').disabled=!selectedAddrId2;
+}
+function selectAddr2(id){selectedAddrId2=id;renderAddrList2();}
+
+function saveAddr2(){
+  const name=document.getElementById('new-name2').value.trim();
+  const phone=document.getElementById('new-phone2').value.trim();
+  const region=document.getElementById('new-region2').value.trim();
+  const detail=document.getElementById('new-detail2').value.trim();
+  if(!name||!phone||!region||!detail){gToast('请填写完整信息');return;}
+  const id='A'+Date.now();
+  addresses.push({id,name,phone,region,detail,isDefault:false});
+  if(!selectedAddrId2)selectedAddrId2=id;
+  gToast('地址已保存');
+  ['new-name2','new-phone2','new-region2','new-detail2'].forEach(i=>document.getElementById(i).value='');
+  renderAddrList2(); shopBack();
+}
+
+function renderConfirm2(){
+  const g=currentGoods2, addr=addresses.find(a=>a.id===selectedAddrId2);
+  document.getElementById('submit-pts2').textContent=g.pts.toLocaleString();
+  document.getElementById('confirm-wrap2').innerHTML=`
+    <div class="confirm-sec"><div class="csec-title">兑换商品</div>
+      <div class="cgoods-row">
+        <div class="cgoods-img">${g.img?`<img src="${g.img}">`:`${g.emoji}`}</div>
+        <div><div class="cgoods-name">${g.name}</div><div class="cgoods-pts">${g.pts.toLocaleString()} 积分</div></div>
+      </div>
+    </div>
+    <div class="confirm-sec" onclick="shopBack();" style="cursor:pointer;">
+      <div class="csec-title" style="display:flex;justify-content:space-between;">收货地址 <span style="color:#ff6b35;font-size:11px;">修改 ›</span></div>
+      <div class="caddr-name">${addr.name}</div>
+      <div class="caddr-phone">${addr.phone}</div>
+      <div class="caddr-region">${addr.region} ${addr.detail}</div>
+    </div>
+    <div class="confirm-sec"><div class="csec-title">兑换明细</div>
+      <div class="csummary-row"><span class="csr-key">当前积分</span><span class="csr-val">${userPearls.toLocaleString()} 分</span></div>
+      <div class="csummary-row"><span class="csr-key">消耗积分</span><span class="csr-val" style="color:#ff6b35;">- ${g.pts.toLocaleString()} 分</span></div>
+      <div class="csummary-row"><span class="csr-key">兑换后余额</span><span class="csr-val">${(userPearls-g.pts).toLocaleString()} 分</span></div>
+      <div class="csummary-row csr-total"><span class="csr-key">合计</span><span class="csr-val">${g.pts.toLocaleString()} 积分</span></div>
+    </div>
+    <div style="background:#fff8f5;border-radius:10px;padding:11px 13px;font-size:12px;color:#ff6b35;line-height:1.7;">
+      ⚠️ 提交后等待管理员审核，审核通过后安排发货，驳回则积分原路退回。
+    </div>`;
+}
+
+
+const statusMap={pending:'待审核',approved:'待发货',shipped:'已发货',done:'已完成',rejected:'已驳回'};
+function renderOrders2(filter='all'){
+  const list=filter==='all'?shopOrders:shopOrders.filter(o=>o.status===filter);
+  const el=document.getElementById('order-list2');
+  if(!list.length){el.innerHTML='<div class="s-empty"><div class="ei">📦</div><div class="et">暂无相关订单</div></div>';return;}
+  el.innerHTML=list.map(o=>`<div class="order-card">
+    <div class="oc-hd"><span class="oc-no">${o.id}</span><span class="oc-status ${o.status}">${statusMap[o.status]}</span></div>
+    <div class="oc-goods-row">
+      <div class="ocg-img">${o.img?`<img src="${o.img}">`:`${o.emoji}`}</div>
+      <div><div class="ocg-name">${o.name}</div><div class="ocg-pts">🪙 ${o.pts.toLocaleString()} 积分</div>
+      <div style="font-size:11px;color:#ccc;margin-top:2px;">${o.addr.substring(0,26)}...</div></div>
+    </div>
+    ${o.express?`<div class="oc-express-info">📦 ${o.express} <span style="color:#ff6b35;cursor:pointer;" onclick="showExpressSheet('${o.express}')">查看物流 ›</span></div>`:''}
+    <div class="oc-ft">
+      <span class="oc-time">${o.time}</span>
+      ${o.status==='shipped'?`<span class="oc-action-btn" onclick="confirmReceive2('${o.id}')">确认收货</span>`:''}
+      ${o.status==='done'?`<span class="oc-action-btn" style="color:#34c759;border-color:#34c759;">已完成</span>`:''}
+    </div>
+  </div>`).join('');
+}
+function filterOrders2(f,el){
+  document.querySelectorAll('#order-tabs2 .stab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); renderOrders2(f);
+}
+function confirmReceive2(id){const o=shopOrders.find(o=>o.id===id);if(o){o.status='done';gToast('已确认收货');renderOrders2();}}
+function showExpressSheet(no){
+  showGSheet('快递信息',`<div style="margin-bottom:12px;"><div style="font-size:12px;color:#999;margin-bottom:3px;">快递单号</div><div style="font-size:16px;font-weight:700;">${no}</div></div>
+  <div style="font-size:12px;color:#999;margin-bottom:10px;">物流轨迹</div>
+  ${[['2024-01-15 18:30','快件已送达，签收人：本人'],['2024-01-15 10:20','派送中，派件员：张师傅'],['2024-01-14 22:10','到达广州天河派送点'],['2024-01-14 08:30','离开深圳转运中心'],['2024-01-13 16:45','商家已发货，揽收成功']].map(([t,i])=>`<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;"><div style="font-size:11px;color:#ccc;width:105px;flex-shrink:0;">${t}</div><div style="font-size:13px;color:#333;">${i}</div></div>`).join('')}`);
+}
+
+function showInviteSheet(){
+  showGSheet('我的邀请码',`<div style="text-align:center;padding:10px 0 16px;">
+    <div style="font-size:40px;font-weight:900;color:#ff6b35;letter-spacing:4px;background:#fff5f0;border-radius:12px;padding:16px;margin-bottom:12px;">INV1001</div>
+    <div style="font-size:13px;color:#999;margin-bottom:14px;">分享给好友，好友注册后双方均可获得积分奖励</div>
+    <button onclick="gToast('邀请码已复制');closeGSheet();" style="width:100%;height:40px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">复制邀请码</button>
+  </div>`);
+}
+
+// ══════════════════════════════════════════════════════
+// 充值模块
+// ══════════════════════════════════════════════════════
+const rechargeTiers=[
+  {amount:30,  pts:300,  bonus:0,   label:'入门'},
+  {amount:50,  pts:500,  bonus:30,  label:'推荐'},
+  {amount:100, pts:1000, bonus:100, label:'热门',hot:true},
+  {amount:200, pts:2000, bonus:250, label:'超值'},
+  {amount:500, pts:5000, bonus:800, label:'豪华'},
+  {amount:1000,pts:10000,bonus:2000,label:'至尊'},
+];
+let selectedTier=null;
+let rechargeRecords=[
+  {id:'R20240115001',amount:100,pts:1100,time:'2024-01-15 14:10',status:'approved',remark:'审核通过'},
+  {id:'R20240114001',amount:50, pts:530, time:'2024-01-14 11:20',status:'approved',remark:'审核通过'},
+  {id:'R20240110001',amount:200,pts:2250,time:'2024-01-10 09:30',status:'rejected',remark:'金额不符'},
+];
+
+function showRechargePage(){
+  selectedTier=null;
+  document.getElementById('recharge-page').style.display='flex';
+  document.getElementById('rc-current-pts').textContent=userPearls.toLocaleString();
+  renderTierGrid();
+  updateNextBtn();
+}
+function hideRechargePage(){
+  document.getElementById('recharge-page').style.display='none';
+}
+
+function renderTierGrid(){
+  const grid=document.getElementById('tier-grid');
+  grid.innerHTML=rechargeTiers.map((t,i)=>`
+    <div class="tier-card ${selectedTier===i?'sel':''}" id="tier-${i}" onclick="selectTier(${i})" style="
+      background:#fff;border-radius:12px;padding:12px;text-align:center;cursor:pointer;
+      border:2px solid ${selectedTier===i?'#ff6b35':'#eee'};
+      position:relative;transition:all 0.15s;
+      ${t.hot?'box-shadow:0 2px 12px rgba(255,100,0,0.15);':''}
+    ">
+      ${t.hot?'<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#ff6b35;color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:2px 8px;white-space:nowrap;">🔥 最热</div>':''}
+      <div style="font-size:11px;color:#999;margin-bottom:3px;">${t.label}</div>
+      <div style="font-size:20px;font-weight:900;color:#1a1a1a;">¥${t.amount}</div>
+      <div style="font-size:13px;font-weight:700;color:#ff6b35;margin-top:3px;">${t.pts.toLocaleString()} 积分</div>
+      ${t.bonus>0?`<div style="font-size:11px;color:#34c759;margin-top:2px;">+${t.bonus} 赠送</div>`:'<div style="font-size:11px;color:transparent;">-</div>'}
+    </div>`).join('');
+}
+
+function selectTier(idx){
+  selectedTier=idx;
+  renderTierGrid();
+  document.getElementById('custom-amount').value='';
+  document.getElementById('custom-pts-preview').textContent='= 0 积分';
+  updateSelectedCard();
+  updateNextBtn();
+}
+
+function updateSelectedCard(){
+  const card=document.getElementById('selected-tier-card');
+  if(selectedTier===null){card.style.display='none';return;}
+  const t=rechargeTiers[selectedTier];
+  card.style.display='block';
+  document.getElementById('sel-amount').textContent=t.amount;
+  document.getElementById('sel-pts').textContent=(t.pts+t.bonus).toLocaleString();
+  document.getElementById('sel-bonus').textContent=t.bonus;
+  document.getElementById('sel-bonus-wrap').style.display=t.bonus>0?'block':'none';
+}
+
+function updateNextBtn(){
+  const btn=document.getElementById('btn-next-recharge');
+  const hasSelection=selectedTier!==null || (parseInt(document.getElementById('custom-amount').value)||0)>0;
+  if(hasSelection){
+    btn.disabled=false;
+    btn.style.background='linear-gradient(135deg,#ff6b35,#ff4500)';
+    btn.style.color='#fff';
+    btn.style.cursor='pointer';
+    btn.style.boxShadow='0 4px 0 #a03000';
+  } else {
+    btn.disabled=true;
+    btn.style.background='#ddd';
+    btn.style.color='#aaa';
+    btn.style.cursor='default';
+    btn.style.boxShadow='none';
+  }
+}
+
+// 自定义金额输入
+document.addEventListener('DOMContentLoaded',()=>{
+  const inp=document.getElementById('custom-amount');
+  if(inp){
+    inp.addEventListener('input',()=>{
+      const v=parseInt(inp.value)||0;
+      // 按10元=100积分的比例
+      document.getElementById('custom-pts-preview').textContent='= '+(v*10).toLocaleString()+' 积分';
+      if(v>0){
+        selectedTier=null;
+        renderTierGrid();
+        document.getElementById('selected-tier-card').style.display='block';
+        document.getElementById('sel-amount').textContent=v;
+        document.getElementById('sel-pts').textContent=(v*10).toLocaleString();
+        document.getElementById('sel-bonus-wrap').style.display='none';
+      }
+      updateNextBtn();
+    });
+  }
+});
+
+function getSelectedAmount(){
+  if(selectedTier!==null) return {amount:rechargeTiers[selectedTier].amount, pts:rechargeTiers[selectedTier].pts+rechargeTiers[selectedTier].bonus};
+  const v=parseInt(document.getElementById('custom-amount').value)||0;
+  return {amount:v, pts:v*10};
+}
+
+function goToPayment(){
+  const {amount,pts}=getSelectedAmount();
+  if(!amount){gToast('请选择或输入充值金额');return;}
+  document.getElementById('pay-amount').textContent=amount;
+  document.getElementById('pay-pts-show').textContent=pts.toLocaleString();
+  document.getElementById('notice-amount').textContent=amount;
+  const uid = currentUser?.uid || '用户';
+  document.getElementById('remark-text').textContent='充值 '+uid+' ¥'+amount;
+  document.getElementById('payment-page').style.display='flex';
+  // 加载收款码并显示当前选中的
+  loadQRCodes().then(()=>switchQR(currentQR));
+}
+function hidePaymentPage(){
+  document.getElementById('payment-page').style.display='none';
+}
+
+let currentQR='wechat';
+let _wxQRCache = '';
+let _aliQRCache = '';
+
+// 从后端加载收款码
+async function loadQRCodes(){
+  try{
+    // 先从localStorage读缓存（快速显示）
+    _wxQRCache  = localStorage.getItem('bzm_wx_qr')  || '';
+    _aliQRCache = localStorage.getItem('bzm_ali_qr') || '';
+    // 再从后端拉取最新
+    const res = await api.get('/api/recharge/tiers', false);
+    if(res && res.code===200){
+      if(res.data.wechat_qr) { _wxQRCache=res.data.wechat_qr;  localStorage.setItem('bzm_wx_qr',_wxQRCache); }
+      if(res.data.alipay_qr) { _aliQRCache=res.data.alipay_qr; localStorage.setItem('bzm_ali_qr',_aliQRCache); }
+    }
+  }catch(e){}
+}
+
+function switchQR(type){
+  currentQR=type;
+  const isWx=type==='wechat';
+  document.getElementById('btn-qr-wx').style.background=isWx?'#07c160':'#fff';
+  document.getElementById('btn-qr-wx').style.color=isWx?'#fff':'#999';
+  document.getElementById('btn-qr-wx').style.borderColor=isWx?'#07c160':'#ddd';
+  document.getElementById('btn-qr-ali').style.background=isWx?'#fff':'#1677ff';
+  document.getElementById('btn-qr-ali').style.color=isWx?'#999':'#fff';
+  document.getElementById('btn-qr-ali').style.borderColor=isWx?'#ddd':'#1677ff';
+  document.getElementById('qr-type-label').textContent=isWx?'微信收款码':'支付宝收款码';
+
+  // 显示真实收款码或占位
+  const qrData = isWx ? _wxQRCache : _aliQRCache;
+  const display = document.getElementById('qr-display');
+  if(display){
+    if(qrData){
+      display.innerHTML = `<img src="${qrData}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
+    } else {
+      display.innerHTML = `<div id="qr-placeholder" style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:8px;">${isWx?'💚':'💙'}</div>
+        <div style="font-size:11px;color:#999;">${isWx?'微信':'支付宝'}收款码</div>
+        <div style="font-size:10px;color:#ccc;margin-top:4px;">(管理员后台配置)</div>
+      </div>`;
+    }
+  }
+}
+
+function copyRemark(){
+  const txt=document.getElementById('remark-text').textContent;
+  navigator.clipboard?.writeText(txt).catch(()=>{});
+  gToast('备注已复制：'+txt);
+}
+
+
+function showRechargeRecords(){
+  document.getElementById('recharge-records-page').style.display='flex';
+  renderRechargeRecords();
+}
+function hideRecordsPage(){
+  document.getElementById('recharge-records-page').style.display='none';
+}
+function renderRechargeRecords(){
+  const el=document.getElementById('recharge-records-list');
+  const statusMap={pending:{text:'待审核',color:'#ff9500'},approved:{text:'已通过',color:'#34c759'},rejected:{text:'已驳回',color:'#ff3b30'}};
+  if(!rechargeRecords.length){
+    el.innerHTML='<div style="padding:60px 20px;text-align:center;color:#ccc;"><div style="font-size:44px;margin-bottom:10px;">💳</div><div style="font-size:14px;">暂无充值记录</div></div>';
+    return;
+  }
+  el.innerHTML=rechargeRecords.map(r=>`
+    <div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;color:#ccc;">${r.id}</div>
+        <div style="font-size:12px;font-weight:600;color:${statusMap[r.status].color};">${statusMap[r.status].text}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-size:18px;font-weight:800;color:#1a1a1a;">¥${r.amount}</div>
+        <div style="font-size:16px;font-weight:700;color:#ff6b35;">+${r.pts.toLocaleString()} 积分</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:11px;color:#ccc;">${r.time}</div>
+        <div style="font-size:11px;color:${r.status==='rejected'?'#ff3b30':'#999'};">${r.remark}</div>
+      </div>
+      ${r.status==='rejected'?'<div style="margin-top:8px;background:#fff5f5;border-radius:6px;padding:6px 10px;font-size:11px;color:#ff3b30;">积分未到账，如有疑问请联系客服</div>':''}
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// 初始化
+// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// 邀请好友模块
+// ══════════════════════════════════════════════════════
+
+// 邀请记录（本地mock，后端替换）
+let inviteRecords = [];
+
+function showInvitePage(){
+  const page = document.getElementById('invite-page');
+  if(!page) return;
+  page.style.display = 'flex';
+  // 读取当前用户邀请码
+  const code = currentUser?.inviteCode || 'INV1001';
+  document.getElementById('my-invite-code').textContent = code;
+  document.getElementById('prof-invite-code').textContent = code;
+  document.getElementById('invite-link').textContent = '邀请码：' + code + '（注册时填写）';
+  // 读取邀请奖励配置
+  try{
+    const cfg = JSON.parse(localStorage.getItem('bzm_invite_config') || '{}');
+    document.getElementById('invite-reward-val').textContent = cfg.inviteReward || 100;
+    document.getElementById('invite-new-reward-val').textContent = cfg.inviteNewReward || 50;
+  }catch(e){}
+  // 加载邀请记录
+  loadInviteRecords();
+}
+
+function hideInvitePage(){
+  document.getElementById('invite-page').style.display = 'none';
+}
+
+function loadInviteRecords(){
+  // 从用户列表里找被本人邀请的用户
+  inviteRecords = [];
+  try{
+    const users = JSON.parse(localStorage.getItem('bzm_users') || '[]');
+    const myUid = currentUser?.uid;
+    inviteRecords = users
+      .filter(u => u.invitedBy === myUid)
+      .map(u => ({
+        uid: u.uid,
+        phone: u.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+        time: u.regTime || '未知时间',
+        reward: (() => {
+          try{ return JSON.parse(localStorage.getItem('bzm_invite_config') || '{}').inviteReward || 100; }catch(e){ return 100; }
+        })(),
+        status: '已发放'
+      }));
+  }catch(e){}
+
+  const total = inviteRecords.length;
+  const totalPts = inviteRecords.reduce((s,r) => s + r.reward, 0);
+
+  // 更新统计
+  document.getElementById('stat-invite-count').textContent = total;
+  document.getElementById('stat-invite-pts').textContent = totalPts;
+  document.getElementById('stat-invite-today').textContent = 0; // 实际按日期过滤
+  document.getElementById('invite-record-total').textContent = total;
+  document.getElementById('prof-invite-count').textContent = total + '人';
+  document.getElementById('prof-invite-pts').textContent = '+' + totalPts;
+
+  // 渲染记录列表
+  const el = document.getElementById('invite-records-list');
+  if(!total){
+    el.innerHTML = '<div style="padding:30px 20px;text-align:center;color:#ccc;"><div style="font-size:36px;margin-bottom:8px;">👥</div><div style="font-size:13px;">还没有邀请记录</div><div style="font-size:12px;margin-top:4px;">快去邀请好友吧！</div></div>';
+    return;
+  }
+  el.innerHTML = inviteRecords.map((r,i) => `
+    <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:${i<inviteRecords.length-1?'1px solid #f5f5f5':'none'};">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff9800,#e06000);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-right:10px;">👤</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:#1a1a1a;">${r.phone}</div>
+        <div style="font-size:11px;color:#bbb;margin-top:2px;">${r.time}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:14px;font-weight:700;color:#34c759;">+${r.reward}</div>
+        <div style="font-size:10px;color:#bbb;">积分${r.status}</div>
+      </div>
+    </div>`).join('');
+}
+
+function copyInviteCode(){
+  const code = currentUser?.inviteCode || 'INV1001';
+  navigator.clipboard?.writeText(code).catch(()=>{});
+  gToast('邀请码已复制：' + code);
+  playSound('btn');
+}
+
+function copyInviteLink(){
+  const code = currentUser?.inviteCode || 'INV1001';
+  const text = '我在玩波珠机，邀请你一起来！注册时填写我的邀请码【' + code + '】，双方都能得积分奖励～';
+  navigator.clipboard?.writeText(text).catch(()=>{});
+  gToast('邀请文案已复制，快发给好友！');
+  playSound('btn');
+}
+
+function shareInvite(){
+  const code = currentUser?.inviteCode || 'INV1001';
+  // Web Share API（移动端支持）
+  if(navigator.share){
+    navigator.share({
+      title: '波珠机 - 邀请好友',
+      text: '我在玩波珠机，邀请你一起来！注册时填写邀请码【' + code + '】，双方都能得积分奖励～',
+    }).catch(()=>{});
+  } else {
+    copyInviteLink();
+  }
+}
+
+// 更新个人中心邀请数据
+function updateInviteStats(){
+  if(!currentUser) return;
+  try{
+    const users = JSON.parse(localStorage.getItem('bzm_users') || '[]');
+    const myUid = currentUser.uid;
+    const invited = users.filter(u => u.invitedBy === myUid);
+    const cfg = JSON.parse(localStorage.getItem('bzm_invite_config') || '{}');
+    const reward = cfg.inviteReward || 100;
+    const total = invited.length;
+    const totalPts = total * reward;
+    const codeEl = document.getElementById('prof-invite-code');
+    const countEl = document.getElementById('prof-invite-count');
+    const ptsEl = document.getElementById('prof-invite-pts');
+    if(codeEl) codeEl.textContent = currentUser.inviteCode || 'INV' + currentUser.uid;
+    if(countEl) countEl.textContent = total + '人';
+    if(ptsEl) ptsEl.textContent = '+' + totalPts;
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════
+// 登录/注册 逻辑（账号密码模式，无需验证码）
+// ══════════════════════════════════════════════════════
+let currentUser = null;
+
+// 手机号校验：1开头11位数字
+function isValidPhone(p){ return /^1[3-9]\d{9}$/.test(p); }
+// 身份证校验：17位数字+最后一位数字或X
+function isValidID(id){
+  if(!/^\d{17}[\dXx]$/.test(id)) return false;
+  // 简单加权校验
+  const w=[7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];
+  const c=['1','0','X','9','8','7','6','5','4','3','2'];
+  let s=0;
+  for(let i=0;i<17;i++) s+=parseInt(id[i])*w[i];
+  return c[s%11]===id[17].toUpperCase();
+}
+
+function checkAuth(){
+  try{
+    const u=JSON.parse(localStorage.getItem('bzm_user')||'null');
+    if(u&&u.phone&&u.verified){
+      currentUser=u;
+      enterApp();
+      return;
+    }
+  }catch(e){}
+  document.getElementById('auth-layer').style.display='flex';
+  setTimeout(bindRegInputs,100);
+}
+
+function enterApp(){
+  document.getElementById('auth-layer').style.display='none';
+  if(currentUser){
+    userPearls = currentUser.points || 0;
+    // 从后端拉取最新积分
+    refreshPointsFromAPI();
+    syncPoints();
+    const nameEl=document.querySelector('.ph-name');
+    const phoneEl=document.querySelector('.ph-phone');
+    const idEl=document.querySelector('.ph-id');
+    if(nameEl) nameEl.textContent='用户'+currentUser.phone.slice(-4);
+    if(phoneEl) phoneEl.textContent=currentUser.phone.replace(/(\d{3})\d{4}(\d{4})/,'$1****$2');
+    if(idEl) idEl.textContent='ID: #'+currentUser.uid+' · 已实名认证 ✓';
+    // 邀请统计更新
+    setTimeout(updateInviteStats, 100);
+  }
+}
+
+function switchAuthTab(tab){
+  const isLogin=tab==='login';
+  document.getElementById('panel-login').style.display=isLogin?'block':'none';
+  document.getElementById('panel-register').style.display=isLogin?'none':'block';
+  document.getElementById('tab-login').style.background=isLogin?'rgba(255,255,255,0.15)':'transparent';
+  document.getElementById('tab-login').style.color=isLogin?'#fff':'rgba(255,255,255,0.45)';
+  document.getElementById('tab-register').style.background=isLogin?'transparent':'rgba(255,255,255,0.15)';
+  document.getElementById('tab-register').style.color=isLogin?'rgba(255,255,255,0.45)':'#fff';
+  document.getElementById('login-err').textContent='';
+  document.getElementById('reg-err').textContent='';
+  if(!isLogin) setTimeout(bindRegInputs,50);
+}
+
+function togglePwd(inputId, iconId){
+  const inp=document.getElementById(inputId);
+  const ico=document.getElementById(iconId);
+  if(inp.type==='password'){ inp.type='text'; ico.textContent='🙈'; }
+  else { inp.type='password'; ico.textContent='👁'; }
+}
+
+function validateIDInput(inp){
+  inp.value=inp.value.toUpperCase().replace(/[^0-9X]/g,'').slice(0,18);
+  const ok=document.getElementById('reg-id-ok');
+  if(ok) ok.style.display=isValidID(inp.value)?'block':'none';
+}
+
+function setInputState(wrapId, state){
+  // state: 'normal'|'error'|'ok'
+  const el=document.getElementById(wrapId);
+  if(!el) return;
+  el.style.borderColor = state==='error'?'#ff6666':state==='ok'?'#34c759':'rgba(255,255,255,0.2)';
+}
+
+
+
+// 从后端刷新最新积分
+async function refreshPointsFromAPI(){
+  const token = localStorage.getItem('bzm_token');
+  if(!token) return;
+  try{
+    const res = await api.get('/api/auth/profile');
+    if(res && res.code===200 && res.data){
+      userPearls = res.data.points || 0;
+      if(currentUser) currentUser.points = userPearls;
+      syncPoints();
+    }
+  }catch(e){}
+}
+
+function saveUserPoints(){
+  if(!currentUser) return;
+  try{
+    currentUser.points = userPearls;
+    localStorage.setItem('bzm_user', JSON.stringify(currentUser));
+    const users=JSON.parse(localStorage.getItem('bzm_users')||'[]');
+    const idx=users.findIndex(u=>u.uid===currentUser.uid);
+    if(idx>=0){ users[idx].points=userPearls; localStorage.setItem('bzm_users',JSON.stringify(users)); }
+  }catch(e){}
+}
+
+function logoutUser(){
+  if(!confirm('确认退出登录？')) return;
+  localStorage.removeItem('bzm_user');
+  currentUser=null;
+  userPearls=1000;
+  location.reload();
+}
+
+function authToast(msg){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.78);color:#fff;font-size:13px;border-radius:20px;padding:9px 20px;z-index:1100;white-space:nowrap;pointer-events:none;';
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2500);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const lb=document.querySelector('.logout-btn');
+  if(lb) lb.onclick=logoutUser;
+});
+// 手机号实时校验（延迟绑定，等DOM渲染完）
+function bindRegInputs(){
+  const rp=document.getElementById('reg-phone');
+  if(rp&&!rp._bound){
+    rp._bound=true;
+    rp.addEventListener('input',()=>{
+      const ok=document.getElementById('reg-phone-ok');
+      if(ok) ok.style.display=isValidPhone(rp.value)?'block':'none';
+      setInputState('reg-phone-wrap',isValidPhone(rp.value)?'ok':'normal');
+    });
+  }
+}
+
+buildSlotUI(); goPhase('step1'); syncPoints(); renderGoods2();
+
+window.addEventListener('resize',()=>setTimeout(resize,80));
+setTimeout(()=>{
+  resize();
+  requestAnimationFrame(gameLoop);
+  checkAuth(); // 检查登录状态
+},150);
+</script>
+</body>
+</html>
