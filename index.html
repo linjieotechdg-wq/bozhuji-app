@@ -1311,6 +1311,7 @@ function switchTab(tab){
   document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('bn-'+tab).classList.add('active');
   syncPoints();
+  if(tab==='game'){ setTimeout(()=>{ resize(); },50); }
   if(tab==='shop'){ syncPoints(); renderGoods2(); }
   if(tab==='profile'){
     refreshPointsFromAPI(); // 切换时从后端拉最新积分
@@ -1388,7 +1389,9 @@ function initCanvas(){
 }
 
 function resize(){
+  if(!canvas||!cwrap) return;
   CW=cwrap.clientWidth; CH=cwrap.clientHeight;
+  if(CW<10||CH<10) return; // 隐藏状态跳过
   canvas.width=CW; canvas.height=CH;
   buildWorld();
 }
@@ -2465,7 +2468,7 @@ function updateNextBtn(){
 // 自定义金额输入
 document.addEventListener('DOMContentLoaded',()=>{
   initCanvas();
-  resize();
+  setTimeout(resize, 100);
   const inp=document.getElementById('custom-amount');
   if(inp){
     inp.addEventListener('input',()=>{
