@@ -1390,7 +1390,7 @@ function resize(){
 
 
 const {Engine,Bodies,Body,World,Events}=Matter;
-const engine=Engine.create({gravity:{y:0.32}}), world=engine.world;
+const engine=Engine.create({gravity:{y:0.28}}), world=engine.world;
 const pegPos=[];
 function buildWorld(){
   if(!CW||!CH)return;
@@ -1402,7 +1402,7 @@ function buildWorld(){
     for(let c=0;c<cols;c++){
       const x=startX+c*spacingX,y=pegTop+r*spacingY;
       pegPos.push({x,y,r:PEG_R});
-      World.add(world,Bodies.circle(x,y,PEG_R,{isStatic:true,restitution:0.20,friction:0.00,collisionFilter:{category:2,mask:1},label:'peg'}));
+      World.add(world,Bodies.circle(x,y,PEG_R,{isStatic:true,restitution:0.44,friction:0.01,collisionFilter:{category:2,mask:1},label:'peg'}));
     }
   }
   const wo={isStatic:true,friction:0,restitution:0.2,collisionFilter:{category:2,mask:1}};
@@ -1469,12 +1469,6 @@ function setLit(mult){
 }
 function onLand(ball,idx){
   if(ballLanded)return;
-  // 用算法目标槽覆盖物理落槽（算法主导，物理只是视觉）
-  // 允许±1槽的自然偏差，超出则强制修正
-  if(_targetSlot>=0 && idx!==NUM_SLOTS-1){
-    if(Math.abs(idx-_targetSlot)>2) idx=_targetSlot;
-  }
-  _guideActive=false;
   // 最右侧槽(idx=NUM_SLOTS-1)是发射槽/回收槽
   if(idx===NUM_SLOTS-1){
     // 珠子回收，免费再射一次
@@ -1605,8 +1599,8 @@ function doLaunch(){
   // 保证落点真正随机，不向任何一侧偏斜
   const baseX = CW * (0.25 + Math.random() * 0.50); // 25%~75% 均匀分布
   const powerOffset = (power / 100 - 0.5) * CW * 0.08; // 蓄力只影响±4%微调
-  entryX = Math.max(CW*0.10, Math.min(CW*0.88, baseX + powerOffset));
-  entryY=0;  // 从顶部边缘进入，不压在钉子上
+  entryX = Math.max(CW*0.08, Math.min(CW*0.92, baseX + powerOffset));
+  entryY=CH*0.04;
 }
 function updateLaunch(){
   if(launchState==='rising'){
@@ -1621,7 +1615,7 @@ function updateLaunch(){
     const angle=arcStartAngle+(arcEndAngle-arcStartAngle)*arcProgress;
     ballDrawX=arcCenterX+arcRadius*Math.cos(angle); ballDrawY=arcCenterY+arcRadius*Math.sin(angle);
     if(arcProgress>=1){
-      launchState='straight'; straightProgress=0; straightY=0;
+      launchState='straight'; straightProgress=0; straightY=ballDrawY;
       straightStartX=ballDrawX; straightEndX=entryX;
       const dist=Math.abs(straightStartX-straightEndX);
       straightDuration=Math.max(10,Math.round(dist/riseSpeed));
@@ -1629,46 +1623,18 @@ function updateLaunch(){
   } else if(launchState==='straight'){
     straightProgress+=1/straightDuration; if(straightProgress>=1)straightProgress=1;
     ballDrawX=straightStartX+(straightEndX-straightStartX)*straightProgress; ballDrawY=straightY;
-    if(straightProgress>=1){launchState='entered';spawnBall(entryX, CH*0.03);}
+    if(straightProgress>=1){launchState='entered';spawnBall(ballDrawX,ballDrawY+4);}
   }
 }
-// ── 分层加权路径算法（纯计算，不干预物理） ───────────────────
-// 进场前算好目标槽，物理引擎完整跑，onLand时核对结算
-function getPegProbs(){
-  try{
-    const cfg=JSON.parse(localStorage.getItem('bzm_game_config')||'{}');
-    if(Array.isArray(cfg.pegProbs)&&cfg.pegProbs.length===12) return cfg.pegProbs;
-  }catch(e){}
-  return Array(12).fill(0.5);
-}
-
-function computeTargetSlot(){
-  const ROWS=12, probs=getPegProbs();
-  const usableSlots = NUM_SLOTS - 1;
-  const startSlot = Math.floor(usableSlots*(0.2+Math.random()*0.6));
-  let pos = startSlot * 2;
-  for(let r=0;r<ROWS;r++){
-    if(Math.random()<probs[r]) pos++; else pos--;
-    pos = Math.max(0, Math.min((usableSlots-1)*2, pos));
-  }
-  return Math.min(usableSlots-1, Math.max(0, Math.round(pos/2)));
-}
-
-let _targetSlot = -1;
-
 function spawnBall(x,y){
   const BR=Math.max(6,Math.min(8,CW*0.022));
-  const ball=Bodies.circle(x,y,BR,{restitution:0.30,friction:0.01,frictionAir:0.003,label:'ball',_done:false,collisionFilter:{category:1,mask:6},density:0.005});
-  // 算法预算目标槽（仅用于结算，不干预物理）
-  _targetSlot = computeTargetSlot();
-  // 入射速度：完全随机，物理引擎自由运行
-  const vx = (Math.random()-0.5)*0.8;
-  const vy = 1.2 + Math.random()*0.4;
+  const ball=Bodies.circle(x,y,BR,{restitution:0.40,friction:0.02,frictionAir:0.010,label:'ball',_done:false,collisionFilter:{category:1,mask:6},density:0.003});
+  const vx=(Math.random()-0.5)*1.8;
+  const vy=0.6+Math.random()*0.8;
   Body.setVelocity(ball,{x:vx,y:vy});
   World.add(world,ball);activeBalls.push(ball);
 }
 
-// guideBalls 空函数保留，避免 gameLoop 报错
 function guideBalls(){}
 function gameLoop(){
   updateLaunch(); guideBalls(); Engine.update(engine,16.67);
