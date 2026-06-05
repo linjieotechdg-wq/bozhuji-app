@@ -2225,33 +2225,27 @@ async function deleteAddr2(id){
 }
 
 function showCSContact(){
-  const sheet = document.getElementById('g-sheet');
-  if(sheet){
-    sheet.innerHTML = `<div style="padding:24px 20px 30px;">
-      <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:4px;">联系客服</div>
-      <div style="font-size:12px;color:#999;margin-bottom:20px;">添加客服后发送"波珠机"即可领取100积分</div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div onclick="copyText('690930887')" style="background:#f0f7ff;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid #d0e8ff;">
-          <span style="font-size:24px;">💬</span>
-          <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#1677ff;">QQ 客服</div><div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-top:2px;">690930887</div></div>
-          <span style="font-size:12px;color:#1677ff;font-weight:600;">点击复制</span>
-        </div>
-        <div onclick="copyText('18973118740')" style="background:#f0fff4;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid #c3eecf;">
-          <span style="font-size:24px;">💚</span>
-          <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#07c160;">微信客服</div><div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-top:2px;">18973118740</div></div>
-          <span style="font-size:12px;color:#07c160;font-weight:600;">点击复制</span>
-        </div>
+  showGSheet('联系客服',
+    `<div style="font-size:12px;color:#999;margin-bottom:16px;">添加客服后发送"波珠机"即可领取100积分</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div onclick="copyText('690930887')" style="background:#f0f7ff;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid #d0e8ff;">
+        <span style="font-size:24px;">💬</span>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#1677ff;">QQ 客服</div><div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-top:2px;">690930887</div></div>
+        <span style="font-size:12px;color:#1677ff;font-weight:600;">点击复制</span>
       </div>
-      <div style="margin-top:16px;background:#fff8f0;border-radius:10px;padding:12px 14px;font-size:12px;color:#ff6b35;line-height:1.6;border:1px solid #ffe0c8;">
-        🎁 <b>新用户福利：</b>添加客服后发送"波珠机"，客服审核后为您发放 <b>100积分</b> 奖励
+      <div onclick="copyText('18973118740')" style="background:#f0fff4;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid #c3eecf;">
+        <span style="font-size:24px;">💚</span>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#07c160;">微信客服</div><div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-top:2px;">18973118740</div></div>
+        <span style="font-size:12px;color:#07c160;font-weight:600;">点击复制</span>
       </div>
-      <button onclick="claimCSBonus()" style="margin-top:14px;width:100%;height:44px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
-        ✅ 我已添加客服，申请领取积分
-      </button>
-      <button onclick="closeSheet()" style="margin-top:8px;width:100%;height:40px;border:1px solid #eee;border-radius:10px;background:#fff;color:#999;font-size:13px;cursor:pointer;">关闭</button>
-    </div>`;
-    sheet.style.display='block';
-  }
+    </div>
+    <div style="margin-top:16px;background:#fff8f0;border-radius:10px;padding:12px 14px;font-size:12px;color:#ff6b35;line-height:1.6;border:1px solid #ffe0c8;">
+      🎁 <b>新用户福利：</b>添加客服后发送"波珠机"，客服审核后为您发放 <b>100积分</b> 奖励
+    </div>
+    <button onclick="claimCSBonus()" style="margin-top:14px;width:100%;height:44px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
+      ✅ 我已添加客服，申请领取积分
+    </button>`
+  );
 }
 
 function copyText(txt){
@@ -2262,7 +2256,7 @@ function copyText(txt){
 
 async function claimCSBonus(){
   if(!currentUser){gToast('请先登录');return;}
-  closeSheet();
+  closeGSheet();
   const res = await api.post('/api/user/cs-bonus', {});
   if(!res) return;
   if(res.code===200){
