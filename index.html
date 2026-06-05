@@ -1288,6 +1288,63 @@ async function submitOrder2() {
 // ══════════════════════════════════════════════════════
 let userPearls = 1000;  // 全局积分，游戏和商城共用
 
+// ══════════════════════════════════════════════════════
+// 游戏流程控制（goPhase / showResult / updateS3 / updateS4）
+// ══════════════════════════════════════════════════════
+function goPhase(p){
+  phase=p;
+  ['s1','s2','s3','s4','s5'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+  ['stp1','stp2','stp3','stp4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el){ el.classList.remove('cur','done'); }
+  });
+  const phaseMap={step1:'s1',step2:'s2',step3:'s3',step4:'s4',result:'s5'};
+  const stpMap={step1:0,step2:1,step3:2,step4:3,result:3};
+  const sid=phaseMap[p];
+  if(sid){ const el=document.getElementById(sid); if(el) el.style.display='block'; }
+  const stpIdx=stpMap[p]??0;
+  ['stp1','stp2','stp3','stp4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    if(i<stpIdx) el.classList.add('done');
+    else if(i===stpIdx) el.classList.add('cur');
+  });
+}
+
+function updateS3(){
+  const nb=document.getElementById('nb'); if(nb) nb.textContent=totalBet;
+  const nm=document.getElementById('nm'); if(nm) nm.textContent=currentMult;
+  const nw=document.getElementById('nw'); if(nw) nw.textContent=totalBet*currentMult;
+}
+
+function updateS4(){
+  const els={
+    's4b': totalBet+' 积分',
+    's4m': currentMult+'x',
+    's4w': (totalBet*currentMult)+' 积分',
+    's4l': (WIN_SLOTS[currentMult]||'?')+' / '+NUM_SLOTS
+  };
+  Object.entries(els).forEach(([id,txt])=>{
+    const el=document.getElementById(id); if(el) el.textContent=txt;
+  });
+}
+
+function showResult(won){
+  goPhase('result');
+  totalRounds++;
+  const el=document.getElementById('res-won');
+  const el2=document.getElementById('res-pts');
+  if(el) el.textContent= won>0 ? '🎉 中奖！+'+won+' 积分' : '😔 未中奖';
+  if(el2) el2.textContent='当前积分：'+userPearls;
+  ballFired=false; ballLanded=false; launchState='waiting';
+  ballAnim=null;
+  document.getElementById('firebtn').classList.remove('off');
+  syncPoints();
+}
+
 function syncPoints(){
   document.getElementById('sd').textContent = userPearls;
   document.getElementById('pd').textContent = userPearls;
