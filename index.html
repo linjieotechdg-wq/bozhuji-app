@@ -2078,7 +2078,7 @@ function renderAddrList2(){
 
 function _renderAddrList2Inner(){
   const list=document.getElementById('addr-list2');
-  list.innerHTML=addresses.map(a=>`<div class="addr-card ${a.id===selectedAddrId2?'sel':''}" onclick="selectAddr2('${a.id}')">
+  list.innerHTML=addresses.map(a=>`<div class="addr-card ${String(a.id)===String(selectedAddrId2)?'sel':''}" onclick="selectAddr2('${a.id}')">
     <div class="ac-check">${a.id===selectedAddrId2?'✓':''}</div>
     <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
       <span class="ac-name">${a.name}</span><span class="ac-phone">${a.phone}</span>
@@ -2088,8 +2088,11 @@ function _renderAddrList2Inner(){
   </div>`).join('');
   list.innerHTML+=`<div class="add-addr-card" onclick="shopGoto('sp-add-addr')">＋ 新增收货地址</div>`;
   document.getElementById('addr-confirm-btn2').disabled=!selectedAddrId2;
+  if(selectedAddrId2 && addresses.length>0 && !addresses.find(a=>String(a.id)===String(selectedAddrId2))){
+    selectedAddrId2=String(addresses[0].id);
+  }
 }
-function selectAddr2(id){selectedAddrId2=id;renderAddrList2();}
+function selectAddr2(id){selectedAddrId2=String(id);renderAddrList2();}
 
 async function saveAddr2(){
   const name=document.getElementById('new-name2').value.trim();
