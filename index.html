@@ -2048,7 +2048,34 @@ function gotoDetail2(id){
   document.getElementById('sp-detail').classList.add('active');
 }
 
+async function loadAddressesFromAPI(){
+  try{
+    const res = await api.get('/api/address/list');
+    if(res && res.code===200 && res.data && res.data.length>0){
+      addresses = res.data.map(a=>({
+        id: String(a.id),
+        name: a.name,
+        phone: a.phone,
+        region: a.region,
+        detail: a.detail,
+        isDefault: a.is_default
+      }));
+      // 默认选中默认地址
+      const def = addresses.find(a=>a.isDefault);
+      if(def) selectedAddrId2 = def.id;
+      else if(addresses.length>0) selectedAddrId2 = addresses[0].id;
+    }
+  }catch(e){}
+}
+
 function renderAddrList2(){
+  // 先从后端加载
+  loadAddressesFromAPI().then(()=>{
+    _renderAddrList2Inner();
+  });
+}
+
+function _renderAddrList2Inner(){
   const list=document.getElementById('addr-list2');
   list.innerHTML=addresses.map(a=>`<div class="addr-card ${a.id===selectedAddrId2?'sel':''}" onclick="selectAddr2('${a.id}')">
     <div class="ac-check">${a.id===selectedAddrId2?'✓':''}</div>
@@ -2063,15 +2090,24 @@ function renderAddrList2(){
 }
 function selectAddr2(id){selectedAddrId2=id;renderAddrList2();}
 
-function saveAddr2(){
+async function saveAddr2(){
   const name=document.getElementById('new-name2').value.trim();
   const phone=document.getElementById('new-phone2').value.trim();
   const region=document.getElementById('new-region2').value.trim();
   const detail=document.getElementById('new-detail2').value.trim();
   if(!name||!phone||!region||!detail){gToast('请填写完整信息');return;}
-  const id='A'+Date.now();
-  addresses.push({id,name,phone,region,detail,isDefault:false});
-  if(!selectedAddrId2)selectedAddrId2=id;
+  // 调用后端保存
+  const res = await api.post('/api/address/add', {name,phone,region,detail,is_default:addresses.length===0});
+  if(res && res.code===200){
+    const newAddr = {id: String(res.data.id), name, phone, region, detail, isDefault: addresses.length===0};
+    addresses.push(newAddr);
+    if(!selectedAddrId2) selectedAddrId2 = String(res.data.id);
+  } else {
+    // 后端失败则本地保存
+    const id='A'+Date.now();
+    addresses.push({id,name,phone,region,detail,isDefault:false});
+    if(!selectedAddrId2)selectedAddrId2=id;
+  }
   gToast('地址已保存');
   ['new-name2','new-phone2','new-region2','new-detail2'].forEach(i=>document.getElementById(i).value='');
   renderAddrList2(); shopBack();
