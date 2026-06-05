@@ -1288,6 +1288,27 @@ async function submitOrder2() {
 // ══════════════════════════════════════════════════════
 let userPearls = 1000;  // 全局积分，游戏和商城共用
 
+
+function doSkip(){
+  goPhase('step4');
+  updateS4();
+}
+
+function doGoShoot(){
+  goPhase('step4');
+  updateS4();
+}
+
+function nextRound(){
+  totalBet = COST_BASE; extraBet = 0; currentMult = 0; litSlots.clear();
+  ballFired = false; ballLanded = false;
+  ballAnim = null;
+  document.getElementById('firebtn').classList.remove('off');
+  buildSlotUI();
+  goPhase('step1');
+  syncPoints();
+}
+
 // ══════════════════════════════════════════════════════
 // 游戏流程控制（goPhase / showResult / updateS3 / updateS4）
 // ══════════════════════════════════════════════════════
@@ -1335,10 +1356,12 @@ function updateS4(){
 function showResult(won){
   goPhase('result');
   totalRounds++;
-  const el=document.getElementById('res-won');
-  const el2=document.getElementById('res-pts');
-  if(el) el.textContent= won>0 ? '🎉 中奖！+'+won+' 积分' : '😔 未中奖';
-  if(el2) el2.textContent='当前积分：'+userPearls;
+  const el=document.getElementById('rtitle');
+  const el2=document.getElementById('rdetail');
+  const ico=document.getElementById('rico');
+  if(ico) ico.textContent = won>0 ? '🎉' : '😔';
+  if(el) el.textContent= won>0 ? '中奖！+'+won+' 积分' : '未中奖';
+  if(el2) el2.textContent='当前积分：'+userPearls+'　本局倍率：'+currentMult+'x';
   ballFired=false; ballLanded=false; launchState='waiting';
   ballAnim=null;
   document.getElementById('firebtn').classList.remove('off');
@@ -1537,16 +1560,19 @@ function computePath() {
 // ── 建钉板坐标 ────────────────────────────────────────
 function buildPegGrid() {
   pegGrid = [];
-  const slotW = CW / NUM_SLOTS;
-  const pegTop = CH * 0.04;
-  const pegBot = CH - 28;
-  const rowH = (pegBot - pegTop) / ROWS;
+  const PAD = CW * 0.04;           // 左右留边
+  const usableW = CW - PAD * 2;
+  const pegTop = CH * 0.05;
+  const pegBot = CH - 30;
+  const rowH = (pegBot - pegTop) / (ROWS - 1);
   for (let r = 0; r < ROWS; r++) {
-    const cols = (r % 2 === 0) ? PEG_COLS : PEG_COLS - 1;
-    const offsetX = (r % 2 === 0) ? slotW * 0.5 : slotW;
+    const even = (r % 2 === 0);
+    const cols = even ? 11 : 10;   // 奇数行11颗，偶数行10颗
+    const spacingX = usableW / (even ? 10 : 9);
+    const startX = even ? PAD : PAD + spacingX * 0.5;
     for (let c = 0; c < cols; c++) {
       pegGrid.push({
-        x: offsetX + c * slotW,
+        x: startX + c * spacingX,
         y: pegTop + r * rowH
       });
     }
