@@ -490,17 +490,6 @@ canvas{display:block;width:100%;height:100%;}
 
     <!-- ── 游戏 Tab ── -->
     <div class="tab-view active" id="game-view" data-tab="game">
-      <!-- 客服公告横幅 -->
-      <div class="cs-notice-bar" id="cs-notice-bar">
-        <div class="cs-notice-ico">📢</div>
-        <div style="flex:1;">
-          <div class="cs-notice-txt"><b>新用户福利：</b>添加客服联系方式并发送"波珠机"，即可获得 <b>+100积分</b> 奖励！</div>
-          <div class="cs-contact-row">
-            <div class="cs-contact-item">💬 QQ：<span style="color:#1677ff;">690930887</span></div>
-            <div class="cs-contact-item">💚 微信：<span style="color:#07c160;">18973118740</span></div>
-          </div>
-        </div>
-      </div>
       <div id="cfg-bar">
         <span style="color:rgba(255,220,100,0.7);">⚙️ 后台配置</span>
         <span style="color:rgba(255,220,100,0.9);">每局 <b id="cfg-cost-show">5</b> 积分</span>
@@ -912,6 +901,21 @@ canvas{display:block;width:100%;height:100%;}
         </div>
       </div>
 
+    <!-- 公告栏 -->
+    <div style="margin:12px 12px 0;background:linear-gradient(135deg,#fff8f0,#fff3e0);border:1px solid #ffd5a8;border-radius:14px;padding:12px 14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:15px;">📢</span>
+        <span style="font-size:13px;font-weight:800;color:#ff6b35;">平台公告</span>
+      </div>
+      <div style="font-size:12px;color:#555;line-height:1.8;">
+        🎁 <b>新用户福利：</b>添加客服联系方式并发送"波珠机"，审核后即可获得 <b style="color:#ff6b35;">+100积分</b> 奖励！<br>
+        💬 客服QQ：<b style="color:#1677ff;">690930887</b><br>
+        💚 客服微信：<b style="color:#07c160;">18973118740</b>
+      </div>
+      <button onclick="showCSContact()" style="margin-top:10px;width:100%;height:36px;border:none;border-radius:8px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
+        ✅ 已添加客服，点此领取100积分
+      </button>
+    </div>
     <div class="profile-header">
         <div class="ph-user-row">
           <div class="ph-avatar">👤</div>
