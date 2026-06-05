@@ -2061,19 +2061,16 @@ async function loadAddressesFromAPI(){
         detail: a.detail,
         isDefault: a.is_default
       }));
-      // 默认选中默认地址
       const def = addresses.find(a=>a.isDefault);
-      if(def) selectedAddrId2 = def.id;
-      else if(addresses.length>0) selectedAddrId2 = addresses[0].id;
+      if(def) selectedAddrId2 = String(def.id);
+      else selectedAddrId2 = String(addresses[0].id);
     }
-  }catch(e){}
+  }catch(e){ console.error('加载地址失败',e); }
 }
 
-function renderAddrList2(){
-  // 先从后端加载
-  loadAddressesFromAPI().then(()=>{
-    _renderAddrList2Inner();
-  });
+async function renderAddrList2(){
+  await loadAddressesFromAPI();
+  _renderAddrList2Inner();
 }
 
 function _renderAddrList2Inner(){
