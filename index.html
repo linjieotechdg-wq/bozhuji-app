@@ -2061,9 +2061,12 @@ async function loadAddressesFromAPI(){
         detail: a.detail,
         isDefault: a.is_default
       }));
-      const def = addresses.find(a=>a.isDefault);
-      if(def) selectedAddrId2 = String(def.id);
-      else selectedAddrId2 = String(addresses[0].id);
+      // 只在还没有选中地址时才自动选默认
+      if(!selectedAddrId2 || !addresses.find(a=>String(a.id)===String(selectedAddrId2))){
+        const def = addresses.find(a=>a.isDefault);
+        if(def) selectedAddrId2 = String(def.id);
+        else selectedAddrId2 = String(addresses[0].id);
+      }
     }
   }catch(e){ console.error('加载地址失败',e); }
 }
@@ -2089,7 +2092,7 @@ function _renderAddrList2Inner(){
     selectedAddrId2=String(addresses[0].id);
   }
 }
-function selectAddr2(id){selectedAddrId2=String(id);renderAddrList2();}
+function selectAddr2(id){selectedAddrId2=String(id);_renderAddrList2Inner();}
 
 async function saveAddr2(){
   const name=document.getElementById('new-name2').value.trim();
