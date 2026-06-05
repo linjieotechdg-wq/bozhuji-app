@@ -1379,8 +1379,13 @@ let straightProgress=0, straightDuration=0, straightStartX=0, straightEndX=0, st
 let entryX=0, entryY=0;
 let TUBE_COL_W=36;
 
-const canvas=document.getElementById('gc'), cwrap=document.getElementById('cwrap'), ctx=canvas.getContext('2d');
+let canvas, cwrap, ctx;
 let CW=0, CH=0;
+function initCanvas(){
+  canvas = document.getElementById('gc');
+  cwrap  = document.getElementById('cwrap');
+  if(canvas) ctx = canvas.getContext('2d');
+}
 
 function resize(){
   CW=cwrap.clientWidth; CH=cwrap.clientHeight;
@@ -2458,6 +2463,8 @@ function updateNextBtn(){
 
 // 自定义金额输入
 document.addEventListener('DOMContentLoaded',()=>{
+  initCanvas();
+  resize();
   const inp=document.getElementById('custom-amount');
   if(inp){
     inp.addEventListener('input',()=>{
