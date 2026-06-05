@@ -230,6 +230,16 @@ canvas{display:block;width:100%;height:100%;}
 .ac-phone{font-size:13px;color:#666;}
 .ac-region{font-size:12px;color:#999;margin-top:2px;}
 .ac-default-tag{background:#fff3e0;color:#ff6b35;font-size:10px;border-radius:3px;padding:1px 5px;font-weight:600;margin-left:5px;}
+.ac-del-btn{position:absolute;bottom:10px;right:12px;font-size:11px;color:#ff3b30;background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;opacity:0.7;}
+.ac-del-btn:hover{opacity:1;background:#fff0ee;}
+/* 客服公告横幅 */
+.cs-notice-bar{margin:8px 12px 0;background:linear-gradient(135deg,#fff8f0,#fff3e0);border:1px solid #ffd5a8;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.cs-notice-ico{font-size:18px;flex-shrink:0;}
+.cs-notice-txt{flex:1;font-size:12px;color:#555;line-height:1.6;}
+.cs-notice-txt b{color:#ff6b35;}
+.cs-contact-row{display:flex;gap:8px;margin-top:6px;}
+.cs-contact-item{display:flex;align-items:center;gap:4px;font-size:12px;color:#333;background:#fff;border-radius:8px;padding:4px 10px;border:1px solid #ffe0c8;font-weight:600;}
+.cs-bonus-tip{font-size:11px;color:#ff6b35;font-weight:700;background:#fff3e0;border-radius:6px;padding:3px 8px;margin-top:6px;display:inline-block;}
 .add-addr-card{margin:0 12px 10px;background:#fff;border:1.5px dashed #ddd;border-radius:12px;padding:14px;text-align:center;color:#bbb;font-size:13px;cursor:pointer;}
 .addr-confirm-footer{padding:10px 12px;background:#fff;border-top:1px solid #eee;flex-shrink:0;}
 .addr-confirm-btn{width:100%;height:42px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
@@ -480,6 +490,17 @@ canvas{display:block;width:100%;height:100%;}
 
     <!-- ── 游戏 Tab ── -->
     <div class="tab-view active" id="game-view" data-tab="game">
+      <!-- 客服公告横幅 -->
+      <div class="cs-notice-bar" id="cs-notice-bar">
+        <div class="cs-notice-ico">📢</div>
+        <div style="flex:1;">
+          <div class="cs-notice-txt"><b>新用户福利：</b>添加客服联系方式并发送"波珠机"，即可获得 <b>+100积分</b> 奖励！</div>
+          <div class="cs-contact-row">
+            <div class="cs-contact-item">💬 QQ：<span style="color:#1677ff;">690930887</span></div>
+            <div class="cs-contact-item">💚 微信：<span style="color:#07c160;">18973118740</span></div>
+          </div>
+        </div>
+      </div>
       <div id="cfg-bar">
         <span style="color:rgba(255,220,100,0.7);">⚙️ 后台配置</span>
         <span style="color:rgba(255,220,100,0.9);">每局 <b id="cfg-cost-show">5</b> 积分</span>
@@ -925,6 +946,12 @@ canvas{display:block;width:100%;height:100%;}
           <div class="ps-row" onclick="showInvitePage()"><div class="ps-ico">👫</div><div class="ps-label">已邀请好友</div><div class="ps-val" id="prof-invite-count">0人</div><div class="ps-arrow">›</div></div>
           <div class="ps-row" onclick="showInvitePage()"><div class="ps-ico">💰</div><div class="ps-label">邀请累计获得</div><div class="ps-val" id="prof-invite-pts" style="color:#ff6b35;">+0</div><div class="ps-arrow">›</div></div>
         </div>
+        <div class="ps-title">联系客服</div>
+        <div class="ps-card">
+          <div class="ps-row" onclick="showCSContact()"><div class="ps-ico">💬</div><div class="ps-label">QQ客服</div><div class="ps-val" style="color:#1677ff;font-weight:600;">690930887</div><div class="ps-arrow">›</div></div>
+          <div class="ps-row" onclick="showCSContact()"><div class="ps-ico">💚</div><div class="ps-label">微信客服</div><div class="ps-val" style="color:#07c160;font-weight:600;">18973118740</div><div class="ps-arrow">›</div></div>
+          <div class="ps-row" onclick="claimCSBonus()"><div class="ps-ico">🎁</div><div class="ps-label">已添加客服？领取积分</div><div class="ps-val" style="color:#ff6b35;font-weight:700;">+100积分</div><div class="ps-arrow">›</div></div>
+        </div>
         <div class="ps-title">账号设置</div>
         <div class="ps-card">
           <div class="ps-row"><div class="ps-ico">🔒</div><div class="ps-label">修改密码</div><div class="ps-val"></div><div class="ps-arrow">›</div></div>
@@ -1076,6 +1103,7 @@ async function doRegister() {
   userPearls  = res.data.points;
   if (invite && res.data.points > 0) authToast('注册成功！邀请奖励 +' + res.data.points + ' 积分 🎁');
   else authToast('注册成功！欢迎加入波珠机 🎉');
+  setTimeout(()=>{ gToast('💡 添加客服QQ/微信发送波珠机，可领100积分！'); }, 2000);
   setTimeout(enterApp, 800);
 }
 
@@ -2085,6 +2113,7 @@ function _renderAddrList2Inner(){
       ${a.isDefault?'<span class="ac-default-tag">默认</span>':''}
     </div>
     <div class="ac-region">${a.region} ${a.detail}</div>
+    <button class="ac-del-btn" onclick="event.stopPropagation();deleteAddr2('${a.id}')">🗑 删除</button>
   </div>`).join('');
   list.innerHTML+=`<div class="add-addr-card" onclick="shopGoto('sp-add-addr')">＋ 新增收货地址</div>`;
   document.getElementById('addr-confirm-btn2').disabled=!selectedAddrId2;
@@ -2093,6 +2122,85 @@ function _renderAddrList2Inner(){
   }
 }
 function selectAddr2(id){selectedAddrId2=String(id);_renderAddrList2Inner();}
+
+async function deleteAddr2(id){
+  if(!confirm('确认删除这个收货地址？')) return;
+  const addr = addresses.find(a=>String(a.id)===String(id));
+  if(!addr) return;
+  try {
+    const res = await api.delete('/api/address/delete/' + id);
+    if(res && res.code===200){
+      addresses = addresses.filter(a=>String(a.id)!==String(id));
+      if(String(selectedAddrId2)===String(id)){
+        const def = addresses.find(a=>a.isDefault);
+        selectedAddrId2 = def ? String(def.id) : (addresses.length>0 ? String(addresses[0].id) : null);
+      }
+      gToast('地址已删除');
+      _renderAddrList2Inner();
+    } else {
+      // 后端失败也删本地
+      addresses = addresses.filter(a=>String(a.id)!==String(id));
+      if(String(selectedAddrId2)===String(id)) selectedAddrId2 = addresses.length>0 ? String(addresses[0].id) : null;
+      gToast('地址已删除');
+      _renderAddrList2Inner();
+    }
+  } catch(e){
+    addresses = addresses.filter(a=>String(a.id)!==String(id));
+    if(String(selectedAddrId2)===String(id)) selectedAddrId2 = addresses.length>0 ? String(addresses[0].id) : null;
+    gToast('地址已删除');
+    _renderAddrList2Inner();
+  }
+}
+
+function showCSContact(){
+  const sheet = document.getElementById('g-sheet');
+  if(sheet){
+    sheet.innerHTML = `<div style="padding:24px 20px 30px;">
+      <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:4px;">联系客服</div>
+      <div style="font-size:12px;color:#999;margin-bottom:20px;">添加客服后发送"波珠机"即可领取100积分</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div onclick="copyText('690930887')" style="background:#f0f7ff;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid #d0e8ff;">
+          <span style="font-size:24px;">💬</span>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#1677ff;">QQ 客服</div><div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-top:2px;">690930887</div></div>
+          <span style="font-size:12px;color:#1677ff;font-weight:600;">点击复制</span>
+        </div>
+        <div onclick="copyText('18973118740')" style="background:#f0fff4;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid #c3eecf;">
+          <span style="font-size:24px;">💚</span>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#07c160;">微信客服</div><div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-top:2px;">18973118740</div></div>
+          <span style="font-size:12px;color:#07c160;font-weight:600;">点击复制</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;background:#fff8f0;border-radius:10px;padding:12px 14px;font-size:12px;color:#ff6b35;line-height:1.6;border:1px solid #ffe0c8;">
+        🎁 <b>新用户福利：</b>添加客服后发送"波珠机"，客服审核后为您发放 <b>100积分</b> 奖励
+      </div>
+      <button onclick="claimCSBonus()" style="margin-top:14px;width:100%;height:44px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
+        ✅ 我已添加客服，申请领取积分
+      </button>
+      <button onclick="closeSheet()" style="margin-top:8px;width:100%;height:40px;border:1px solid #eee;border-radius:10px;background:#fff;color:#999;font-size:13px;cursor:pointer;">关闭</button>
+    </div>`;
+    sheet.style.display='block';
+  }
+}
+
+function copyText(txt){
+  navigator.clipboard.writeText(txt).then(()=>gToast('已复制：'+txt)).catch(()=>{
+    const el=document.createElement('input');el.value=txt;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);gToast('已复制：'+txt);
+  });
+}
+
+async function claimCSBonus(){
+  if(!currentUser){gToast('请先登录');return;}
+  closeSheet();
+  const res = await api.post('/api/user/cs-bonus', {});
+  if(!res) return;
+  if(res.code===200){
+    userPearls = res.data.points;
+    updatePointsDisplay();
+    gToast('🎉 领取成功！+100积分已到账');
+  } else {
+    gToast(res.msg || '领取失败，请联系客服确认');
+  }
+}
 
 async function saveAddr2(){
   const name=document.getElementById('new-name2').value.trim();
