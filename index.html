@@ -1216,7 +1216,7 @@ async function submitRecharge() {
 async function submitOrder2() {
   if (!currentUser) { gToast('请先登录'); return; }
   const g    = currentGoods2;
-  const addr = addresses.find(a => a.id === selectedAddrId2);
+  const addr = addresses.find(a => String(a.id) === String(selectedAddrId2));
   if (!addr) { gToast('请选择收货地址'); return; }
 
   const res = await api.post('/api/shop/exchange', {
@@ -2076,7 +2076,7 @@ async function renderAddrList2(){
 function _renderAddrList2Inner(){
   const list=document.getElementById('addr-list2');
   list.innerHTML=addresses.map(a=>`<div class="addr-card ${String(a.id)===String(selectedAddrId2)?'sel':''}" onclick="selectAddr2('${a.id}')">
-    <div class="ac-check">${a.id===selectedAddrId2?'✓':''}</div>
+    <div class="ac-check">${String(a.id)===String(selectedAddrId2)?'✓':''}</div>
     <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
       <span class="ac-name">${a.name}</span><span class="ac-phone">${a.phone}</span>
       ${a.isDefault?'<span class="ac-default-tag">默认</span>':''}
@@ -2115,7 +2115,7 @@ async function saveAddr2(){
 }
 
 function renderConfirm2(){
-  const g=currentGoods2, addr=addresses.find(a=>a.id===selectedAddrId2);
+  const g=currentGoods2, addr=addresses.find(a=>String(a.id)===String(selectedAddrId2));
   document.getElementById('submit-pts2').textContent=g.pts.toLocaleString();
   document.getElementById('confirm-wrap2').innerHTML=`
     <div class="confirm-sec"><div class="csec-title">兑换商品</div>
