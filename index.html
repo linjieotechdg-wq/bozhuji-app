@@ -1721,7 +1721,8 @@ function onLandAnim(idx) {
   } else {
     playSound('miss');
   }
-  syncPoints();
+  // 调用后端结算
+  settleBall(idx).catch(e => console.error('结算失败', e));
   setTimeout(() => showResult(won), 1200);
 }
 
@@ -2950,6 +2951,64 @@ function bindRegInputs(){
     });
   }
 }
+
+// ══════════════════════════════════════════════════════
+// 发射按钮：蓄力逻辑
+// ══════════════════════════════════════════════════════
+let pressStart = 0;
+
+function setPow(p){
+  power = Math.max(0, Math.min(100, p));
+  const fill = document.getElementById('vtube-fill');
+  const pval = document.getElementById('pval');
+  if(fill) fill.style.height = power + '%';
+  if(pval) pval.textContent = Math.round(power) + '%';
+}
+
+function startPress(e){
+  if(phase !== 'step4' || ballFired) return;
+  if(e) e.preventDefault();
+  pressing = true;
+  pressStart = Date.now();
+  setPow(0);
+  const fb = document.getElementById('firebtn');
+  if(fb) fb.classList.add('pressing');
+  playSound('charge');
+  pressTimer = setInterval(()=>{
+    const elapsed = Date.now() - pressStart;
+    setPow(Math.min(100, elapsed / 30));
+    playSound('charge');
+  }, 50);
+}
+
+function endPress(e){
+  if(!pressing) return;
+  if(e) e.preventDefault();
+  pressing = false;
+  clearInterval(pressTimer);
+  pressTimer = null;
+  const fb = document.getElementById('firebtn');
+  if(fb) fb.classList.remove('pressing');
+  if(power > 2 && phase === 'step4' && !ballFired){
+    ballFired = true;
+    if(fb) fb.classList.add('off');
+    doLaunch();
+  }
+  setPow(0);
+}
+
+// 绑定发射按钮事件
+document.addEventListener('DOMContentLoaded', ()=>{
+  const fb = document.getElementById('firebtn');
+  if(fb){
+    fb.addEventListener('mousedown',  startPress);
+    fb.addEventListener('touchstart', startPress, {passive:false});
+    fb.addEventListener('mouseup',    endPress);
+    fb.addEventListener('touchend',   endPress,   {passive:false});
+  }
+  document.addEventListener('mouseup',  ()=>{ if(pressing) endPress(null); });
+  document.addEventListener('touchend', ()=>{ if(pressing) endPress(null); });
+});
 
 buildSlotUI(); goPhase('step1'); syncPoints(); renderGoods2();
 
