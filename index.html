@@ -1595,11 +1595,11 @@ function setPow(p){
 function doLaunch(){
   launchState='rising'; ballDrawX=CW-8; ballDrawY=CH*0.85; riseSpeed=3.5+power*0.025;
   playSound('launch');
-  // 入射X：蓄力大→偏左，小→偏右，但加入大量随机扰动
-  // 让物理碰撞主导最终落点，蓄力只影响大致区域
-  const baseX = CW*(0.88-(power/100)*0.55);
-  const randomOffset = (Math.random()-0.5)*CW*0.35; // 大范围随机扰动
-  entryX = Math.max(CW*0.05, Math.min(CW*0.95, baseX+randomOffset));
+  // 入射X：以中央为基准，随机均匀分布，蓄力只影响小范围偏移
+  // 保证落点真正随机，不向任何一侧偏斜
+  const baseX = CW * (0.25 + Math.random() * 0.50); // 25%~75% 均匀分布
+  const powerOffset = (power / 100 - 0.5) * CW * 0.08; // 蓄力只影响±4%微调
+  entryX = Math.max(CW*0.08, Math.min(CW*0.92, baseX + powerOffset));
   entryY=CH*0.04;
 }
 function updateLaunch(){
@@ -1630,7 +1630,7 @@ function spawnBall(x,y){
   const BR=Math.max(6,Math.min(8,CW*0.022));
   const ball=Bodies.circle(x,y,BR,{restitution:0.40,friction:0.02,frictionAir:0.010,label:'ball',_done:false,collisionFilter:{category:1,mask:6},density:0.003});
   // 入场速度完全随机化，不让玩家通过蓄力预判落槽
-  const vx = -0.3 + (Math.random()-0.5)*1.8;
+  const vx = (Math.random()-0.5)*1.6; // 对称随机，均值为0
   const vy = 0.6 + Math.random()*0.8;
   Body.setVelocity(ball,{x:vx,y:vy});
   World.add(world,ball);activeBalls.push(ball);
