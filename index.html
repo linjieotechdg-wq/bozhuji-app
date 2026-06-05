@@ -1554,7 +1554,7 @@ function launchBallAnim(targetSlot, path) {
 // ── 主循环 ────────────────────────────────────────────
 function gameLoop() {
   drawGame();
-  if (!ballAnim || ballAnim.done) { animFrame = null; return; }
+  if (!ballAnim || ballAnim.done) { animFrame = null; ballAnim = null; return; }
 
   const b = ballAnim;
 
@@ -1778,6 +1778,7 @@ function buildWorld() {
   buildPegGrid();
   buildSlotUI();
   if (currentMult) setLit(currentMult);
+  if (ctx) drawGame(); // 初始渲染钉板
 }
 
 // 兼容旧粒子接口
@@ -2869,7 +2870,6 @@ buildSlotUI(); goPhase('step1'); syncPoints(); renderGoods2();
 window.addEventListener('resize',()=>setTimeout(resize,80));
 setTimeout(()=>{
   resize();
-  requestAnimationFrame(gameLoop);
   checkAuth(); // 检查登录状态
 },150);
 </script>
