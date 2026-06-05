@@ -1390,7 +1390,7 @@ function resize(){
 
 
 const {Engine,Bodies,Body,World,Events}=Matter;
-const engine=Engine.create({gravity:{y:0.28}}), world=engine.world;
+const engine=Engine.create({gravity:{y:1.2}}), world=engine.world;
 const pegPos=[];
 function buildWorld(){
   if(!CW||!CH)return;
@@ -1402,7 +1402,7 @@ function buildWorld(){
     for(let c=0;c<cols;c++){
       const x=startX+c*spacingX,y=pegTop+r*spacingY;
       pegPos.push({x,y,r:PEG_R});
-      World.add(world,Bodies.circle(x,y,PEG_R,{isStatic:true,restitution:0.44,friction:0.01,collisionFilter:{category:2,mask:1},label:'peg'}));
+      World.add(world,Bodies.circle(x,y,PEG_R,{isStatic:true,restitution:0.20,friction:0.00,collisionFilter:{category:2,mask:1},label:'peg'}));
     }
   }
   const wo={isStatic:true,friction:0,restitution:0.2,collisionFilter:{category:2,mask:1}};
@@ -1658,12 +1658,12 @@ let _targetSlot = -1;
 
 function spawnBall(x,y){
   const BR=Math.max(6,Math.min(8,CW*0.022));
-  const ball=Bodies.circle(x,y,BR,{restitution:0.40,friction:0.02,frictionAir:0.010,label:'ball',_done:false,collisionFilter:{category:1,mask:6},density:0.003});
+  const ball=Bodies.circle(x,y,BR,{restitution:0.30,friction:0.01,frictionAir:0.003,label:'ball',_done:false,collisionFilter:{category:1,mask:6},density:0.005});
   // 算法预算目标槽（仅用于结算，不干预物理）
   _targetSlot = computeTargetSlot();
   // 入射速度：完全随机，物理引擎自由运行
-  const vx = (Math.random()-0.5)*1.2;
-  const vy = 0.8 + Math.random()*0.6;
+  const vx = (Math.random()-0.5)*2.0;
+  const vy = 3.0 + Math.random()*1.0;
   Body.setVelocity(ball,{x:vx,y:vy});
   World.add(world,ball);activeBalls.push(ball);
 }
