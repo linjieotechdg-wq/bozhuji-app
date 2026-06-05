@@ -1653,8 +1653,7 @@ function doLaunch() {
 }
 
 // launchState/updateLaunch/entryX 兼容旧代码（发射按钮流程不变）
-let launchState = 'waiting';
-let entryX = 0, entryY = 0;
+// 注：launchState/entryX 已在上方声明，此处不重复
 function updateLaunch() {
   // 新引擎：发射由doLaunch直接处理，updateLaunch留空
 }
