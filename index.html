@@ -1390,7 +1390,7 @@ function resize(){
 
 
 const {Engine,Bodies,Body,World,Events}=Matter;
-const engine=Engine.create({gravity:{y:1.2}}), world=engine.world;
+const engine=Engine.create({gravity:{y:0.5}}), world=engine.world;
 const pegPos=[];
 function buildWorld(){
   if(!CW||!CH)return;
@@ -1662,8 +1662,8 @@ function spawnBall(x,y){
   // 算法预算目标槽（仅用于结算，不干预物理）
   _targetSlot = computeTargetSlot();
   // 入射速度：完全随机，物理引擎自由运行
-  const vx = (Math.random()-0.5)*1.5;
-  const vy = 4.5 + Math.random()*1.5;
+  const vx = (Math.random()-0.5)*1.2;
+  const vy = 2.5 + Math.random()*0.8;
   Body.setVelocity(ball,{x:vx,y:vy});
   World.add(world,ball);activeBalls.push(ball);
 }
