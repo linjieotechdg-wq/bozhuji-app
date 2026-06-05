@@ -1219,7 +1219,11 @@ async function submitOrder2() {
   if (!addr) { gToast('请选择收货地址'); return; }
 
   const res = await api.post('/api/shop/exchange', {
-    goods_id: g.id, addr_id: addr.id
+    goods_id:    g.id,
+    addr_name:   addr.name,
+    addr_phone:  addr.phone,
+    addr_region: addr.region,
+    addr_detail: addr.detail
   });
   if (!res || res.code !== 200) { gToast(res?.msg || '兑换失败'); return; }
 
