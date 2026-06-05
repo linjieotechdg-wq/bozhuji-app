@@ -1469,6 +1469,12 @@ function setLit(mult){
 }
 function onLand(ball,idx){
   if(ballLanded)return;
+  // 用算法目标槽覆盖物理落槽（算法主导，物理只是视觉）
+  // 允许±1槽的自然偏差，超出则强制修正
+  if(_targetSlot>=0 && idx!==NUM_SLOTS-1){
+    if(Math.abs(idx-_targetSlot)>2) idx=_targetSlot;
+  }
+  _guideActive=false;
   // 最右侧槽(idx=NUM_SLOTS-1)是发射槽/回收槽
   if(idx===NUM_SLOTS-1){
     // 珠子回收，免费再射一次
@@ -1626,17 +1632,79 @@ function updateLaunch(){
     if(straightProgress>=1){launchState='entered';spawnBall(ballDrawX,ballDrawY+4);}
   }
 }
+// ── 分层加权路径算法 ─────────────────────────────────────────
+// 从后台 peg_probs 配置中读取每行向右概率
+// peg_probs: 数组[12]，每个值0~1表示该行钉子向右的概率
+// 高倍槽：降低偏向该槽的概率；低倍槽：提高概率
+// 算法输出目标槽位，Matter.js 只负责视觉表演
+function getPegProbs(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem('bzm_game_config')||'{}');
+    if(Array.isArray(cfg.pegProbs)&&cfg.pegProbs.length===12) return cfg.pegProbs;
+  }catch(e){}
+  // 默认：每行0.5（纯随机），可被后台覆盖
+  return Array(12).fill(0.5);
+}
+
+// 用分层加权随机模拟12行钉子路径，返回目标槽位索引(0~NUM_SLOTS-2，排除回收槽)
+function computeTargetSlot(targetSlotOverride){
+  // 如果服务端已指定落槽（未来扩展），直接用
+  if(targetSlotOverride!=null) return targetSlotOverride;
+
+  const ROWS=12;
+  const probs=getPegProbs();
+  // 入射列：从中间区域随机选起点（对应槽位0~NUM_SLOTS-2中的位置）
+  // 每行碰到钉子后，以prob[r]概率向右走，(1-prob[r])向左走
+  // 12行后累计偏移决定最终槽位
+  const usableSlots = NUM_SLOTS - 1; // 排除最右回收槽
+  const startSlot = Math.floor(usableSlots * (0.2 + Math.random()*0.6)); // 20%~80%均匀入射
+  let pos = startSlot * 2; // ×2 精度，偶数列对齐钉子
+
+  for(let r=0;r<ROWS;r++){
+    const p = probs[r]; // 该行向右概率
+    if(Math.random()<p) pos++; else pos--;
+    pos = Math.max(0, Math.min((usableSlots-1)*2, pos));
+  }
+
+  return Math.min(usableSlots-1, Math.max(0, Math.round(pos/2)));
+}
+
+// 当珠子进入板后，持续施加微小力引导其趋向目标槽，同时保留物理碰撞感
+let _targetSlot = -1;
+let _guideActive = false;
+
 function spawnBall(x,y){
   const BR=Math.max(6,Math.min(8,CW*0.022));
   const ball=Bodies.circle(x,y,BR,{restitution:0.40,friction:0.02,frictionAir:0.010,label:'ball',_done:false,collisionFilter:{category:1,mask:6},density:0.003});
-  // 入场速度完全随机化，不让玩家通过蓄力预判落槽
-  const vx = (Math.random()-0.5)*1.6; // 对称随机，均值为0
-  const vy = 0.6 + Math.random()*0.8;
+
+  // 算法决定目标槽
+  _targetSlot = computeTargetSlot(null);
+  _guideActive = true;
+
+  // 初始速度：小幅随机，让碰钉看起来自然
+  const vx = (Math.random()-0.5)*0.8;
+  const vy = 0.8 + Math.random()*0.5;
   Body.setVelocity(ball,{x:vx,y:vy});
   World.add(world,ball);activeBalls.push(ball);
 }
+
+// 每帧对活跃珠子施加引导力（在gameLoop里调用）
+function guideBalls(){
+  if(!_guideActive||_targetSlot<0) return;
+  activeBalls.forEach(ball=>{
+    if(ball._done) return;
+    // 目标X：目标槽中心
+    const slotW = CW/NUM_SLOTS;
+    const targetX = _targetSlot * slotW + slotW/2;
+    const dx = targetX - ball.position.x;
+    // 引导力：随下落深度增强（上方弱，下方强），但幅度很小，保留碰钉随机感
+    const depthRatio = Math.min(1, ball.position.y / (CH*0.8));
+    const guideFx = dx * 0.00012 * depthRatio;
+    Body.applyForce(ball, ball.position, {x:guideFx, y:0});
+  });
+}
 function gameLoop(){
-  updateLaunch(); Engine.update(engine,16.67);
+  updateLaunch(); guideBalls(); Engine.update(engine,16.67);
   activeBalls.forEach(b=>{if((b.position.y>CH+60||b.position.x<-80||b.position.x>CW+80)&&!b._done){b._done=true;try{World.remove(world,b);}catch(e){}activeBalls=activeBalls.filter(x=>x!==b);if(!ballLanded){ballLanded=true;setTimeout(()=>showResult(0),400);}}});
   drawGame(); requestAnimationFrame(gameLoop);
 }
