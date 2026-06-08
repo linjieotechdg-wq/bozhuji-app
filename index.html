@@ -1395,7 +1395,7 @@ function switchTab(tab){
   document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('bn-'+tab).classList.add('active');
   syncPoints();
-  if(tab==='game'){ setTimeout(()=>{ resize(); },50); }
+  if(tab==='game'){ setTimeout(()=>{ resize(); requestAnimationFrame(loop); },50); }
   if(tab==='shop'){ syncPoints(); renderGoods2(); }
   if(tab==='profile'){
     refreshPointsFromAPI(); // 切换时从后端拉最新积分
@@ -3060,7 +3060,8 @@ buildSlotUI(); goPhase('step1'); syncPoints(); renderGoods2();
 window.addEventListener('resize',()=>setTimeout(resize,80));
 setTimeout(()=>{
   resize();
-  checkAuth(); // 检查登录状态
+  requestAnimationFrame(loop);
+  checkAuth();
 },150);
 </script>
 </body>
