@@ -65,114 +65,70 @@ html,body{width:100%;height:100%;overflow:hidden;background:#4a2080;}
   font-family:'PingFang SC','Helvetica Neue',sans-serif;
   background:linear-gradient(180deg,#6a1fa0 0%,#3d0f6e 100%);
 }
+/* ══ 老虎机 CSS ══ */
 #topbar{display:flex;align-items:center;gap:6px;padding:5px 12px 3px;flex-shrink:0;}
-.tbadge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,220,100,0.6);border-radius:24px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
-.tbi{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;}
-.tbi-g{background:#f5c400;color:#7a3c00;}
-.tbi-b{background:radial-gradient(circle at 35% 30%,#60d8ff,#1090cc);}
-.tbadge span{font-size:14px;font-weight:800;color:#fff;}
-#infobar{background:rgba(255,255,255,0.1);border-radius:12px;margin:0 8px 2px;padding:4px 8px;border:1px solid rgba(255,255,255,0.15);display:flex;justify-content:space-around;flex-shrink:0;}
-.ist{font-size:10px;color:rgba(255,255,255,0.75);text-align:center;}
-.ist b{font-size:12px;color:#ffe840;display:inline;margin-left:2px;font-weight:800;}
-#multbar{display:flex;align-items:center;justify-content:center;padding:1px 12px 2px;flex-shrink:0;}
-#mbox{display:flex;gap:4px;background:rgba(0,0,0,0.3);border-radius:14px;padding:5px 10px;border:2px solid rgba(255,200,80,0.5);box-shadow:0 2px 10px rgba(0,0,0,0.3);}
-.ms{width:34px;height:36px;background:linear-gradient(180deg,#ffd860,#f5a800);border:2px solid #c87800;border-radius:10px;box-shadow:0 3px 0 #a06000,0 1px 4px rgba(0,0,0,0.2);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#7a3c00;position:relative;transition:all 0.15s;}
-.ms .dd{width:6px;height:6px;border-radius:50%;background:#c07800;position:absolute;top:3px;}
-.ms.spin{background:#ff8800;color:#fff;border-color:#ff5500;}
-.ms.active{background:#ee1100;border-color:#ff6666;color:#fff;box-shadow:0 0 16px rgba(255,60,60,0.9);transform:scale(1.13);}
-.ms.active .dd{background:#ffaaaa;}
-#machine-row{flex:1;min-height:0;display:flex;padding:0 8px;gap:0;}
-#lgutter{width:16px;flex-shrink:0;background:linear-gradient(180deg,#ffd860,#d4900a);border-radius:14px 0 0 14px;border:3px solid #e8a010;border-right:none;box-shadow:-2px 0 6px rgba(200,120,0,0.3);}
-#cwrap{flex:1;position:relative;background:linear-gradient(180deg,#fff9e0 0%,#ffee90 100%);border-top:3px solid #e8a010;border-bottom:3px solid #e8a010;overflow:hidden;}
-canvas{display:block;width:100%;height:100%;}
-#rtube-col{width:36px;flex-shrink:0;display:flex;flex-direction:column;position:relative;}
-#vtube{flex:1;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(180deg,#ffd860,#f5c840,#ffd860);border-radius:0 14px 14px 0;border:3px solid #e8a010;border-left:none;}
-#vtube-track{width:18px;height:100%;border-radius:9px;border:2px solid #a06000;background:linear-gradient(90deg,#b87000 0%,#f5e090 20%,#fff8d0 50%,#f5e090 80%,#b87000 100%);position:relative;overflow:hidden;box-shadow:0 0 8px rgba(200,140,0,0.5);}
-#vtube-fill{position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(to top,#ff2200,#ff8800,#ffee00);transition:height 0.03s linear;opacity:0.8;border-radius:7px;}
-#vtube-shine{position:absolute;top:4px;bottom:4px;left:3px;width:4px;border-radius:2px;background:linear-gradient(180deg,rgba(255,255,220,0.8),rgba(255,255,220,0.1));}
-#rbtm{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:4px 0 8px;background:linear-gradient(180deg,#ffd860,#e8a010);border-radius:0 0 14px 0;border:3px solid #e8a010;border-top:none;border-left:none;}
-#pval{font-size:8px;color:#7a3c00;font-weight:700;margin-bottom:3px;}
-#firebtn{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe880,#ff9800);border:2.5px solid #e07000;color:#7a3c00;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;box-shadow:0 4px 0 #a05000,0 0 12px rgba(255,150,0,0.4);transition:all 0.08s;}
-#firebtn.pressing{transform:scale(0.88) translateY(2px);box-shadow:0 1px 0 #8b5e00;background:radial-gradient(circle at 35% 35%,#ff8800,#cc3300);}
-#firebtn.off{opacity:0.3;pointer-events:none;}
-#slotsrow{display:flex;margin:0 8px;margin-left:calc(8px + 14px);margin-right:calc(8px + 36px);height:20px;background:rgba(100,50,0,0.18);border:2px solid #c07800;border-top:none;border-radius:0 0 8px 8px;}
-.slot{flex:1;text-align:center;font-size:9px;font-weight:700;color:#a06020;line-height:20px;border-right:1px solid rgba(180,100,0,0.3);}
-.slot:last-child{border-right:none;font-size:11px;}
-.slot.lit{animation:slotflash 0.35s ease-in-out infinite alternate;}
-@keyframes slotflash{0%{background:#cc0000;color:#fff;}100%{background:#ff2200;color:#ffe8e8;}}
-.slot.wf{background:#ffee00!important;color:#cc0000!important;animation:none!important;}
-#overlay{position:absolute;inset:0;background:rgba(80,30,0,0.88);display:flex;align-items:center;justify-content:center;z-index:20;}
-#overlay.hidden{display:none;}
-#obox{background:linear-gradient(180deg,#fff9ec,#ffe8b0);border:3px solid #ffc840;border-radius:20px;padding:18px 20px;text-align:center;max-width:250px;box-shadow:0 0 30px rgba(255,200,80,0.4);}
-#otitle{font-size:20px;font-weight:900;color:#c85000;margin-bottom:10px;letter-spacing:1px;}
-.ofstep{display:flex;align-items:center;gap:8px;background:rgba(200,100,0,0.1);border-radius:8px;padding:5px 10px;margin-bottom:4px;text-align:left;}
-.ofnum{width:22px;height:22px;border-radius:50%;background:#f5a800;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.oftxt{font-size:11px;color:#7a3c00;line-height:1.4;}
-.oftxt b{color:#c85000;display:block;}
-#obtn{background:linear-gradient(135deg,#ff9800,#e05000);border:none;border-radius:20px;padding:10px 28px;font-size:14px;font-weight:900;color:#fff;cursor:pointer;margin-top:10px;width:100%;box-shadow:0 5px 0 #a03000,0 0 20px rgba(255,120,0,0.3);}
-#announce{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);background:rgba(80,20,0,0.92);color:#ffe840;font-size:24px;font-weight:900;padding:12px 24px;border-radius:14px;border:3px solid #f5a800;display:none;z-index:30;pointer-events:none;white-space:nowrap;}
-#bottom{flex-shrink:0;padding:3px 8px 4px;display:flex;flex-direction:column;gap:3px;}
-#stepbar{display:flex;gap:3px;}
-.stp{flex:1;text-align:center;font-size:10px;padding:4px 2px;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.08);border-radius:8px;}
-.stp.cur{background:linear-gradient(135deg,#ff9800,#e06000);color:#fff;font-weight:700;box-shadow:0 2px 6px rgba(255,120,0,0.4);}
-.stp.done{background:rgba(0,200,120,0.25);color:#80ffcc;}
-.card{background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,220,100,0.3);border-radius:14px;padding:7px 11px;backdrop-filter:blur(4px);}
-.ctitle{font-size:10px;color:#ffe840;font-weight:700;letter-spacing:1px;margin-bottom:6px;text-shadow:0 1px 3px rgba(0,0,0,0.3);}
-#s1-row{display:flex;align-items:center;gap:10px;}
-.cost-tag{background:rgba(255,255,255,0.15);border:2px solid rgba(255,200,80,0.6);border-radius:14px;padding:8px 14px;text-align:center;flex-shrink:0;}
-.ctv{font-size:22px;font-weight:900;color:#ffe840;text-shadow:0 2px 4px rgba(0,0,0,0.3);}
-.ctl{font-size:9px;color:rgba(255,255,255,0.6);}
-#btn-buy{flex:1;height:42px;border-radius:14px;background:linear-gradient(180deg,#ff9800,#e05000);border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #a03000,0 0 15px rgba(255,120,0,0.3);letter-spacing:1px;}
-#btn-buy:active{transform:translateY(2px);box-shadow:0 1px 0 #903800;}
-#s2-row{display:flex;align-items:center;gap:8px;}
-#btn-confirm{flex:1;height:42px;border-radius:14px;background:linear-gradient(180deg,#50dd18,#28a000);border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #106000,0 0 15px rgba(80,220,0,0.3);}
-#btn-confirm:active{transform:translateY(2px);box-shadow:0 1px 0 #104400;}
-#btn-confirm:disabled{background:#aaa;border-color:#888;box-shadow:none;}
-.mult-tag{background:rgba(255,255,255,0.15);border:2px solid rgba(255,200,80,0.5);border-radius:14px;padding:6px 12px;text-align:center;flex-shrink:0;min-width:58px;}
-.mtv{font-size:22px;font-weight:900;color:#ffe840;text-shadow:0 2px 4px rgba(0,0,0,0.4);}
-.mtl{font-size:9px;color:rgba(255,255,255,0.6);}
-#s3-note{font-size:11px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border-radius:10px;padding:5px 8px;line-height:1.7;margin-bottom:6px;}
-#s3-note b{color:#ffe840;}
-#s3-ctrls{display:flex;align-items:center;gap:5px;margin-bottom:5px;}
-#btn-j1{width:36px;height:36px;border-radius:8px;background:linear-gradient(180deg,#ff9800,#e06000);border:2px solid #c04800;color:#fff;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 2px 0 #903800;flex-shrink:0;}
-#btn-j1:active{transform:translateY(1px);}
-#jinput{flex:1;background:rgba(200,130,0,0.15);border:1.5px solid #d4900a;color:#7a3c00;font-size:14px;font-weight:700;text-align:center;border-radius:8px;padding:5px;outline:none;min-width:0;}
-#jinput:focus{border-color:#ff9800;}
-#btn-jadd{background:linear-gradient(180deg,#ff9800,#e06000);border:2px solid #c04800;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;}
-.jstat{font-size:11px;color:rgba(255,255,255,0.7);line-height:1.7;margin-bottom:5px;}
-.jstat b{color:#ffe840;}
-#s3-btns{display:flex;gap:6px;}
-#btn-skip{flex:1;background:rgba(150,80,0,0.15);border:1.5px solid rgba(200,130,0,0.4);border-radius:8px;padding:4px;font-size:11px;color:#8a4c10;cursor:pointer;}
-#btn-goshoot{flex:1;background:linear-gradient(180deg,#ff9800,#e06000);border:2px solid #c04800;border-radius:8px;padding:4px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;}
-#s4-body{display:flex;gap:10px;align-items:center;}
-.sstats{flex:1;}
-.sr{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;}
-.sl{color:rgba(255,255,255,0.6);}.sv{color:#ffe840;font-weight:700;}
-.firehint{background:rgba(255,150,0,0.2);border:1.5px solid rgba(255,200,0,0.4);border-radius:12px;padding:7px 10px;text-align:center;font-size:11px;color:#ffe840;font-weight:700;line-height:1.7;animation:fhp 1s ease-in-out infinite alternate;}
-@keyframes fhp{0%{background:rgba(255,150,0,0.15);}100%{background:rgba(255,150,0,0.35);}}
-#s5-body{display:flex;align-items:center;gap:10px;}
-.rico{font-size:32px;flex-shrink:0;}
-.rinfo{flex:1;}
-.rtitle{font-size:13px;font-weight:900;color:#ffe840;margin-bottom:2px;}
-.rdetail{font-size:11px;color:rgba(255,255,255,0.75);line-height:1.7;}
-.rdetail b{color:#ffe840;}
-.pos{color:#1a8800!important;}.neg{color:#cc2200!important;}
-#btn-next{background:linear-gradient(135deg,#ff9800,#e05000);border:none;border-radius:14px;padding:8px 14px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0;box-shadow:0 3px 0 #a03000;}
-#tip{font-size:11px;color:#ffcc66;text-align:center;min-height:14px;text-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.tbadge{display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,220,80,0.35);border-radius:20px;padding:3px 10px 3px 4px;}
+.tbi{width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#fff;}
+.tbi-g{background:linear-gradient(135deg,#f5a623,#e8860a);}
+.tbi-b{background:linear-gradient(135deg,#4fc3f7,#0288d1);}
+.tbadge span{font-size:13px;font-weight:800;color:#ffe870;}
 #cfg-bar{background:rgba(0,0,0,0.25);padding:2px 12px;border-radius:0 0 8px 8px;margin:0 8px;display:flex;justify-content:space-between;align-items:center;font-size:10px;flex-shrink:0;}
+#slots-machine{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 12px 10px;gap:7px;overflow-y:auto;background:linear-gradient(180deg,#12002e 0%,#240060 50%,#12002e 100%);position:relative;min-height:0;}
+.slot-lights{display:flex;width:100%;justify-content:space-around;padding:2px 4px;}
+.slot-lights span{width:11px;height:11px;border-radius:50%;background:#ffd700;box-shadow:0 0 7px #ffd700,0 0 14px #ff8800;animation:blink-lights 0.7s infinite alternate;}
+.slot-lights span:nth-child(2n){animation-delay:.35s;background:#ff3366;box-shadow:0 0 7px #ff3366,0 0 14px #ff0044;}
+.slot-lights span:nth-child(3n){animation-delay:.15s;background:#00ccff;box-shadow:0 0 7px #00ccff,0 0 14px #0088ff;}
+@keyframes blink-lights{0%{opacity:1;transform:scale(1);}100%{opacity:.35;transform:scale(.75);}}
+#jackpot-title{font-size:20px;font-weight:900;letter-spacing:3px;background:linear-gradient(180deg,#ffe566 0%,#ffaa00 50%,#ff6600 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px rgba(255,180,0,.9));font-family:'Arial Black',Arial,sans-serif;margin:2px 0;}
+#paytable{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;background:rgba(0,0,0,.4);border:1px solid rgba(255,200,0,.25);border-radius:10px;padding:6px 8px;width:100%;box-sizing:border-box;}
+.pt-row{display:flex;align-items:center;gap:3px;font-size:11px;white-space:nowrap;}
+.pt-row span:first-child{font-size:12px;}
+.pt-odds{color:#ffd700;font-weight:800;background:rgba(255,180,0,.15);border-radius:4px;padding:1px 5px;}
+#reels-wrapper{position:relative;width:100%;background:linear-gradient(180deg,#0a0020,#160040,#0a0020);border:3px solid #c8a000;border-radius:16px;box-shadow:0 0 24px rgba(200,160,0,.6),inset 0 0 30px rgba(0,0,0,.6);padding:14px 8px;box-sizing:border-box;}
+#reels-frame{display:flex;gap:6px;justify-content:center;position:relative;height:162px;overflow:hidden;border-radius:10px;}
+#win-line{position:absolute;top:50%;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,rgba(255,220,0,.7),rgba(255,100,0,1),rgba(255,220,0,.7),transparent);transform:translateY(-50%);z-index:10;pointer-events:none;box-shadow:0 0 14px rgba(255,180,0,.8);}
+.reel-deco{position:absolute;top:0;bottom:0;width:14px;background:linear-gradient(180deg,#c8a000,#7a5c00,#c8a000);border-radius:7px;}
+.reel-deco.left{left:-3px;} .reel-deco.right{right:-3px;}
+.reel-col{flex:1;height:162px;overflow:hidden;position:relative;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,20,.15) 50%,rgba(0,0,0,.5) 100%);border:1px solid rgba(200,160,0,.3);}
+.reel-strip{position:absolute;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;will-change:transform;}
+.reel-symbol{width:100%;height:54px;display:flex;align-items:center;justify-content:center;font-size:34px;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));}
+.reel-col::before,.reel-col::after{content:'';position:absolute;left:0;right:0;height:44px;z-index:5;pointer-events:none;}
+.reel-col::before{top:0;background:linear-gradient(180deg,rgba(0,0,30,.9),transparent);}
+.reel-col::after{bottom:0;background:linear-gradient(0deg,rgba(0,0,30,.9),transparent);}
+.reel-col.spinning .reel-strip{animation:none;}
+.reel-col.win-flash{animation:win-flash-col .25s 5 alternate;}
+@keyframes win-flash-col{0%{background:rgba(255,200,0,.05);}100%{background:rgba(255,200,0,.25);}}
+.reel-symbol.center-win{animation:symbol-bounce .35s ease infinite alternate;}
+@keyframes symbol-bounce{0%{transform:scale(1);}100%{transform:scale(1.3);filter:drop-shadow(0 0 10px gold) brightness(1.4);}}
+#bet-area{display:flex;gap:10px;width:100%;background:rgba(0,0,0,.35);border-radius:12px;padding:8px 12px;box-sizing:border-box;border:1px solid rgba(200,160,0,.2);}
+#bet-display,#win-display{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.bet-label{font-size:10px;color:rgba(255,220,120,.7);font-weight:700;letter-spacing:1px;}
+#bet-btns{display:flex;gap:5px;}
+.bet-chip{width:38px;height:38px;border-radius:50%;border:2px solid #c8a000;background:radial-gradient(circle at 35% 35%,#ffe566,#cc8800);color:#5a3000;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 3px 0 #7a5000,0 0 8px rgba(200,140,0,.4);transition:all .1s;}
+.bet-chip:active{transform:translateY(2px);box-shadow:0 1px 0 #7a5000;}
+.bet-chip.active{background:radial-gradient(circle at 35% 35%,#fff700,#ff8800);border-color:#ff6600;box-shadow:0 3px 0 #aa3000,0 0 16px rgba(255,120,0,.8);transform:scale(1.14);}
+#win-amount{font-size:28px;font-weight:900;background:linear-gradient(180deg,#ffe566,#ff8800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 6px rgba(255,160,0,.5));min-width:60px;text-align:center;transition:all .3s;}
+#win-amount.pop{animation:win-pop .4s ease;}
+@keyframes win-pop{0%{transform:scale(1);}50%{transform:scale(1.4);}100%{transform:scale(1);}}
+#spin-area{display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;}
+#spin-btn{width:100%;height:56px;border-radius:16px;border:none;cursor:pointer;background:linear-gradient(180deg,#ff7700,#cc2200);box-shadow:0 5px 0 #880000,0 0 24px rgba(255,80,0,.6);position:relative;overflow:hidden;transition:all .1s;}
+#spin-btn::before{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.3),transparent);border-radius:16px 16px 0 0;pointer-events:none;}
+#spin-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #880000;}
+#spin-btn.disabled{opacity:.45;pointer-events:none;cursor:not-allowed;}
+#spin-btn-text{display:block;font-size:24px;font-weight:900;letter-spacing:5px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6);font-family:'Arial Black',Arial,sans-serif;}
+#spin-cost-tip{font-size:11px;color:rgba(255,220,180,.8);margin-top:-3px;}
+#auto-spin-row{display:flex;align-items:center;gap:8px;}
+#auto-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,200,0,.3);border-radius:20px;padding:4px 18px;color:rgba(255,220,120,.8);font-size:12px;cursor:pointer;transition:all .2s;}
+#auto-btn.active{background:rgba(255,180,0,.3);border-color:#ffd700;color:#ffd700;}
+#auto-count-show{font-size:11px;color:rgba(255,220,100,.6);}
+#slot-announce{position:fixed;top:28%;left:50%;transform:translateX(-50%);z-index:500;pointer-events:none;}
+.slot-announce-msg{background:linear-gradient(135deg,#ff6600,#ffcc00);color:#fff;font-weight:900;font-size:22px;padding:12px 30px;border-radius:40px;box-shadow:0 4px 24px rgba(255,120,0,.8);animation:announce-pop 1.8s ease forwards;white-space:nowrap;letter-spacing:2px;text-shadow:0 2px 4px rgba(0,0,0,.4);}
+@keyframes announce-pop{0%{opacity:0;transform:scale(.5);}15%{opacity:1;transform:scale(1.15);}30%{transform:scale(1);}70%{opacity:1;}100%{opacity:0;transform:translateY(-50px) scale(.9);}}
+.coin-particle{position:fixed;pointer-events:none;z-index:600;font-size:22px;animation:coin-fall 1.4s ease forwards;}
+@keyframes coin-fall{0%{opacity:1;transform:translateY(0) rotate(0deg);}100%{opacity:0;transform:translateY(220px) rotate(720deg);}}
+#slots-machine.jackpot-bg{animation:jackpot-bg .25s 8 alternate;}
+@keyframes jackpot-bg{0%{background:linear-gradient(180deg,#12002e,#240060,#12002e);}100%{background:linear-gradient(180deg,#2a0060,#5000c0,#2a0060);}}
 
-/* ════════════════════════════════════════
-   商城Tab 样式
-════════════════════════════════════════ */
-#shop-view{
-  font-family:'PingFang SC','Helvetica Neue',sans-serif;
-  background:#f5f5f5;
-  overflow:hidden;
-}
-/* 商城内部子页面 */
-.shop-page{display:none;flex:1;flex-direction:column;overflow-y:auto;position:absolute;inset:0;}
-.shop-page.active{display:flex;}
-/* 商城顶栏 */
 .shop-navbar{background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:40;}
 .snb-back{font-size:22px;color:#333;cursor:pointer;padding:6px 8px 6px 0;}
 .snb-title{flex:1;font-size:16px;font-weight:700;color:#1a1a1a;}
@@ -230,16 +186,6 @@ canvas{display:block;width:100%;height:100%;}
 .ac-phone{font-size:13px;color:#666;}
 .ac-region{font-size:12px;color:#999;margin-top:2px;}
 .ac-default-tag{background:#fff3e0;color:#ff6b35;font-size:10px;border-radius:3px;padding:1px 5px;font-weight:600;margin-left:5px;}
-.ac-del-btn{position:absolute;bottom:10px;right:12px;font-size:11px;color:#ff3b30;background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;opacity:0.7;}
-.ac-del-btn:hover{opacity:1;background:#fff0ee;}
-/* 客服公告横幅 */
-.cs-notice-bar{margin:8px 12px 0;background:linear-gradient(135deg,#fff8f0,#fff3e0);border:1px solid #ffd5a8;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
-.cs-notice-ico{font-size:18px;flex-shrink:0;}
-.cs-notice-txt{flex:1;font-size:12px;color:#555;line-height:1.6;}
-.cs-notice-txt b{color:#ff6b35;}
-.cs-contact-row{display:flex;gap:8px;margin-top:6px;}
-.cs-contact-item{display:flex;align-items:center;gap:4px;font-size:12px;color:#333;background:#fff;border-radius:8px;padding:4px 10px;border:1px solid #ffe0c8;font-weight:600;}
-.cs-bonus-tip{font-size:11px;color:#ff6b35;font-weight:700;background:#fff3e0;border-radius:6px;padding:3px 8px;margin-top:6px;display:inline-block;}
 .add-addr-card{margin:0 12px 10px;background:#fff;border:1.5px dashed #ddd;border-radius:12px;padding:14px;text-align:center;color:#bbb;font-size:13px;cursor:pointer;}
 .addr-confirm-footer{padding:10px 12px;background:#fff;border-top:1px solid #eee;flex-shrink:0;}
 .addr-confirm-btn{width:100%;height:42px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
@@ -490,6 +436,7 @@ canvas{display:block;width:100%;height:100%;}
 
     <!-- ── 游戏 Tab ── -->
     <div class="tab-view active" id="game-view" data-tab="game">
+      <!-- ══ 老虎机顶部信息栏 ══ -->
       <div id="cfg-bar">
         <span style="color:rgba(255,220,100,0.7);">⚙️ 后台配置</span>
         <span style="color:rgba(255,220,100,0.9);">每局 <b id="cfg-cost-show">5</b> 积分</span>
@@ -503,88 +450,87 @@ canvas{display:block;width:100%;height:100%;}
           <div id="sound-btn" onclick="toggleSound()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:4px 10px;font-size:14px;cursor:pointer;">🔊</div>
         </div>
       </div>
-      <div id="infobar">
-        <div class="ist">本轮赌注<b id="cur-bet">0</b></div>
-        <div class="ist">当前倍率<b id="cur-odds">—</b></div>
-        <div class="ist">本轮奖励<b id="cur-win">0</b></div>
-        <div class="ist">累计局数<b id="total-rounds">0</b></div>
-      </div>
-      <div id="multbar">
-        <div id="mbox">
-          <div class="ms" id="ms0"><div class="dd"></div>2</div>
-          <div class="ms" id="ms1"><div class="dd"></div>4</div>
-          <div class="ms" id="ms2"><div class="dd"></div>6</div>
-          <div class="ms" id="ms3"><div class="dd"></div>8</div>
-          <div class="ms" id="ms4"><div class="dd"></div>10</div>
+
+      <!-- ══ 老虎机主体 ══ -->
+      <div id="slots-machine">
+
+        <!-- 灯光装饰条 -->
+        <div class="slot-lights" id="slot-lights">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
         </div>
-      </div>
-      <div id="machine-row">
-        <div id="lgutter"></div>
-        <div id="cwrap">
-          <canvas id="gc"></canvas>
-          <div id="overlay">
-            <div id="obox">
-              <div id="otitle">🎯 波珠机</div>
-              <div class="ofstep"><div class="ofnum">1</div><div class="oftxt"><b>投入积分</b>获得本局资格</div></div>
-              <div class="ofstep"><div class="ofnum">2</div><div class="oftxt"><b>确认倍率</b>随机2/4/6/8/10倍</div></div>
-              <div class="ofstep"><div class="ofnum">3</div><div class="oftxt"><b>加注（可选）</b>追加赌注</div></div>
-              <div class="ofstep"><div class="ofnum">4</div><div class="oftxt"><b>蓄力发射</b>右轨上升入场</div></div>
-              <button id="obtn" onclick="openGame()">开始游戏！</button>
+
+        <!-- 大奖提示 -->
+        <div id="jackpot-title">🎰 LUCKY SLOTS</div>
+
+        <!-- 赔率展示 -->
+        <div id="paytable">
+          <div class="pt-row"><span>7️⃣7️⃣7️⃣</span><span class="pt-odds">×50</span></div>
+          <div class="pt-row"><span>💎💎💎</span><span class="pt-odds">×20</span></div>
+          <div class="pt-row"><span>🍒🍒🍒</span><span class="pt-odds">×10</span></div>
+          <div class="pt-row"><span>⭐⭐⭐</span><span class="pt-odds">×5</span></div>
+          <div class="pt-row"><span>🍋🍋🍋</span><span class="pt-odds">×3</span></div>
+          <div class="pt-row"><span>任意两同</span><span class="pt-odds">×1.5</span></div>
+        </div>
+
+        <!-- 滚轮区域 -->
+        <div id="reels-wrapper">
+          <div id="reels-frame">
+            <!-- 中奖线 -->
+            <div id="win-line"></div>
+            <!-- 三列滚轮 -->
+            <div class="reel-col" id="reel-0"><div class="reel-strip" id="strip-0"></div></div>
+            <div class="reel-col" id="reel-1"><div class="reel-strip" id="strip-1"></div></div>
+            <div class="reel-col" id="reel-2"><div class="reel-strip" id="strip-2"></div></div>
+          </div>
+          <!-- 左右装饰 -->
+          <div class="reel-deco left"></div>
+          <div class="reel-deco right"></div>
+        </div>
+
+        <!-- 下注区域 -->
+        <div id="bet-area">
+          <div id="bet-display">
+            <div class="bet-label">押注</div>
+            <div id="bet-btns">
+              <button class="bet-chip active" data-bet="5" onclick="selectBet(5)">5</button>
+              <button class="bet-chip" data-bet="10" onclick="selectBet(10)">10</button>
+              <button class="bet-chip" data-bet="20" onclick="selectBet(20)">20</button>
+              <button class="bet-chip" data-bet="50" onclick="selectBet(50)">50</button>
             </div>
           </div>
-          <div id="announce"></div>
-        </div>
-        <div id="rtube-col">
-          <div id="vtube"><div id="vtube-track"><div id="vtube-fill"></div><div id="vtube-shine"></div></div></div>
-          <div id="rbtm"><div id="pval">0%</div><div id="firebtn" class="off">▲</div></div>
-        </div>
-      </div>
-      <div id="slotsrow"></div>
-      <div id="bottom">
-        <div id="stepbar">
-          <div class="stp cur" id="stp1">① 投入</div>
-          <div class="stp" id="stp2">② 倍率</div>
-          <div class="stp" id="stp3">③ 加注</div>
-          <div class="stp" id="stp4">④ 发射</div>
-        </div>
-        <div id="tip"></div>
-        <div class="card" id="s1"><div class="ctitle">STEP 1 · 投入积分</div>
-          <div id="s1-row"><div class="cost-tag"><div class="ctv" id="s1-cost">5</div><div class="ctl">积分/局</div></div>
-          <button id="btn-buy" onclick="doBuy()">投入 <span id="buy-cost-show">5</span> 积分</button></div>
-        </div>
-        <div class="card" id="s2" style="display:none;"><div class="ctitle">STEP 2 · 确认本局倍率</div>
-          <div id="s2-row"><button id="btn-confirm" onclick="doConfirm()">点击随机<br>确认倍率</button>
-          <div class="mult-tag"><div class="mtl">本局倍率</div><div class="mtv" id="mtv">?</div></div></div>
-        </div>
-        <div class="card" id="s3" style="display:none;"><div class="ctitle">STEP 3 · 加注（可选）</div>
-          <div id="s3-note">赌注 <b id="nb">5</b> × <b id="nm">?</b>倍 = 可赢 <b id="nw">?</b> 积分</div>
-          <div id="s3-ctrls"><button id="btn-j1" onclick="addOne()">＋1</button>
-            <input id="jinput" type="number" min="1" value="10" placeholder="积分数">
-            <button id="btn-jadd" onclick="addCustom()">加注</button></div>
-          <div class="jstat">追加: <b id="jze">0</b>　总赌注: <b id="jzt">5</b> 积分</div>
-          <div id="s3-btns"><button id="btn-skip" onclick="doSkip()">不加注，直接发射</button>
-            <button id="btn-goshoot" onclick="doGoShoot()">确认，去发射</button></div>
-        </div>
-        <div class="card" id="s4" style="display:none;"><div class="ctitle">STEP 4 · 蓄力发射</div>
-          <div id="s4-body">
-            <div class="sstats">
-              <div class="sr"><span class="sl">本局赌注</span><span class="sv" id="s4b">—</span></div>
-              <div class="sr"><span class="sl">当前倍率</span><span class="sv" id="s4m">—</span></div>
-              <div class="sr"><span class="sl">中奖可得</span><span class="sv" id="s4w">—</span></div>
-              <div class="sr"><span class="sl">亮槽/总槽</span><span class="sv" id="s4l">—</span></div>
-            </div>
-            <div class="firehint">按住 ▲<br>蓄力<br>松手发射</div>
+          <div id="win-display">
+            <div class="bet-label">赢得</div>
+            <div id="win-amount">0</div>
           </div>
         </div>
-        <div class="card" id="s5" style="display:none;"><div class="ctitle">本局结算</div>
-          <div id="s5-body">
-            <div class="rico" id="rico">🎯</div>
-            <div class="rinfo"><div class="rtitle" id="rtitle">—</div><div class="rdetail" id="rdetail">—</div></div>
-            <button id="btn-next" onclick="nextRound()">再来</button>
+
+        <!-- SPIN按钮 -->
+        <div id="spin-area">
+          <button id="spin-btn" onclick="doSpin()">
+            <span id="spin-btn-text">SPIN</span>
+            <div id="spin-cost-tip">消耗 <b id="spin-cost-val">5</b> 积分</div>
+          </button>
+          <div id="auto-spin-row">
+            <button id="auto-btn" onclick="toggleAuto()">自动</button>
+            <span id="auto-count-show"></span>
           </div>
         </div>
-      </div>
+
+        <!-- 底部灯光 -->
+        <div class="slot-lights bottom" id="slot-lights-bottom">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <!-- 中奖弹幕 -->
+        <div id="slot-announce"></div>
+
+      </div><!-- /slots-machine -->
+
     </div><!-- /game-view -->
+
+
 
     <!-- ── 商城 Tab ── -->
     <div class="tab-view" id="shop-view" data-tab="shop">
@@ -901,21 +847,6 @@ canvas{display:block;width:100%;height:100%;}
         </div>
       </div>
 
-    <!-- 公告栏 -->
-    <div style="margin:12px 12px 0;background:linear-gradient(135deg,#fff8f0,#fff3e0);border:1px solid #ffd5a8;border-radius:14px;padding:12px 14px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span style="font-size:15px;">📢</span>
-        <span style="font-size:13px;font-weight:800;color:#ff6b35;">平台公告</span>
-      </div>
-      <div style="font-size:12px;color:#555;line-height:1.8;">
-        🎁 <b>新用户福利：</b>添加客服联系方式并发送"波珠机"，审核后即可获得 <b style="color:#ff6b35;">+100积分</b> 奖励！<br>
-        💬 客服QQ：<b style="color:#1677ff;">690930887</b><br>
-        💚 客服微信：<b style="color:#07c160;">18973118740</b>
-      </div>
-      <button onclick="showCSContact()" style="margin-top:10px;width:100%;height:36px;border:none;border-radius:8px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
-        ✅ 已添加客服，点此领取100积分
-      </button>
-    </div>
     <div class="profile-header">
         <div class="ph-user-row">
           <div class="ph-avatar">👤</div>
@@ -949,12 +880,6 @@ canvas{display:block;width:100%;height:100%;}
           <div class="ps-row" onclick="showInvitePage()"><div class="ps-ico">🎁</div><div class="ps-label">邀请好友得积分</div><div class="ps-val" style="color:#ff6b35;font-weight:700;" id="prof-invite-code">INV1001</div><div class="ps-arrow">›</div></div>
           <div class="ps-row" onclick="showInvitePage()"><div class="ps-ico">👫</div><div class="ps-label">已邀请好友</div><div class="ps-val" id="prof-invite-count">0人</div><div class="ps-arrow">›</div></div>
           <div class="ps-row" onclick="showInvitePage()"><div class="ps-ico">💰</div><div class="ps-label">邀请累计获得</div><div class="ps-val" id="prof-invite-pts" style="color:#ff6b35;">+0</div><div class="ps-arrow">›</div></div>
-        </div>
-        <div class="ps-title">联系客服</div>
-        <div class="ps-card">
-          <div class="ps-row" onclick="showCSContact()"><div class="ps-ico">💬</div><div class="ps-label">QQ客服</div><div class="ps-val" style="color:#1677ff;font-weight:600;">690930887</div><div class="ps-arrow">›</div></div>
-          <div class="ps-row" onclick="showCSContact()"><div class="ps-ico">💚</div><div class="ps-label">微信客服</div><div class="ps-val" style="color:#07c160;font-weight:600;">18973118740</div><div class="ps-arrow">›</div></div>
-          <div class="ps-row" onclick="claimCSBonus()"><div class="ps-ico">🎁</div><div class="ps-label">已添加客服？领取积分</div><div class="ps-val" style="color:#ff6b35;font-weight:700;">+100积分</div><div class="ps-arrow">›</div></div>
         </div>
         <div class="ps-title">账号设置</div>
         <div class="ps-card">
@@ -998,7 +923,7 @@ canvas{display:block;width:100%;height:100%;}
 </div>
 
 <!-- Matter.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<!-- Matter.js removed, slots engine -->
 <script>
 // ══════════════════════════════════════════════════════
 // API 客户端（连接后端真实接口）
@@ -1107,7 +1032,6 @@ async function doRegister() {
   userPearls  = res.data.points;
   if (invite && res.data.points > 0) authToast('注册成功！邀请奖励 +' + res.data.points + ' 积分 🎁');
   else authToast('注册成功！欢迎加入波珠机 🎉');
-  setTimeout(()=>{ gToast('💡 添加客服QQ/微信发送波珠机，可领100积分！'); }, 2000);
   setTimeout(enterApp, 800);
 }
 
@@ -1248,7 +1172,7 @@ async function submitRecharge() {
 async function submitOrder2() {
   if (!currentUser) { gToast('请先登录'); return; }
   const g    = currentGoods2;
-  const addr = addresses.find(a => String(a.id) === String(selectedAddrId2));
+  const addr = addresses.find(a => a.id === selectedAddrId2);
   if (!addr) { gToast('请选择收货地址'); return; }
 
   const res = await api.post('/api/shop/exchange', {
@@ -1288,90 +1212,6 @@ async function submitOrder2() {
 // ══════════════════════════════════════════════════════
 let userPearls = 1000;  // 全局积分，游戏和商城共用
 
-
-function doSkip(){
-  goPhase('step4');
-  updateS4();
-  const fb=document.getElementById('firebtn');
-  if(fb) fb.classList.remove('off');
-}
-
-function doGoShoot(){
-  goPhase('step4');
-  updateS4();
-  const fb=document.getElementById('firebtn');
-  if(fb) fb.classList.remove('off');
-}
-
-function nextRound(){
-  totalBet = COST_BASE; extraBet = 0; currentMult = 0; litSlots.clear();
-  ballFired = false; ballLanded = false;
-  ballAnim = null;
-  document.getElementById('firebtn').classList.remove('off');
-  buildSlotUI();
-  goPhase('step1');
-  syncPoints();
-}
-
-// ══════════════════════════════════════════════════════
-// 游戏流程控制（goPhase / showResult / updateS3 / updateS4）
-// ══════════════════════════════════════════════════════
-function goPhase(p){
-  phase=p;
-  ['s1','s2','s3','s4','s5'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display='none';
-  });
-  ['stp1','stp2','stp3','stp4'].forEach((id,i)=>{
-    const el=document.getElementById(id);
-    if(el){ el.classList.remove('cur','done'); }
-  });
-  const phaseMap={step1:'s1',step2:'s2',step3:'s3',step4:'s4',result:'s5'};
-  const stpMap={step1:0,step2:1,step3:2,step4:3,result:3};
-  const sid=phaseMap[p];
-  if(sid){ const el=document.getElementById(sid); if(el) el.style.display='block'; }
-  const stpIdx=stpMap[p]??0;
-  ['stp1','stp2','stp3','stp4'].forEach((id,i)=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-    if(i<stpIdx) el.classList.add('done');
-    else if(i===stpIdx) el.classList.add('cur');
-  });
-}
-
-function updateS3(){
-  const nb=document.getElementById('nb'); if(nb) nb.textContent=totalBet;
-  const nm=document.getElementById('nm'); if(nm) nm.textContent=currentMult;
-  const nw=document.getElementById('nw'); if(nw) nw.textContent=totalBet*currentMult;
-}
-
-function updateS4(){
-  const els={
-    's4b': totalBet+' 积分',
-    's4m': currentMult+'x',
-    's4w': (totalBet*currentMult)+' 积分',
-    's4l': (WIN_SLOTS[currentMult]||'?')+' / '+NUM_SLOTS
-  };
-  Object.entries(els).forEach(([id,txt])=>{
-    const el=document.getElementById(id); if(el) el.textContent=txt;
-  });
-}
-
-function showResult(won){
-  goPhase('result');
-  totalRounds++;
-  const el=document.getElementById('rtitle');
-  const el2=document.getElementById('rdetail');
-  const ico=document.getElementById('rico');
-  if(ico) ico.textContent = won>0 ? '🎉' : '😔';
-  if(el) el.textContent= won>0 ? '中奖！+'+won+' 积分' : '未中奖';
-  if(el2) el2.textContent='当前积分：'+userPearls+'　本局倍率：'+currentMult+'x';
-  ballFired=false; ballLanded=false; launchState='waiting';
-  ballAnim=null;
-  document.getElementById('firebtn').classList.remove('off');
-  syncPoints();
-}
-
 function syncPoints(){
   document.getElementById('sd').textContent = userPearls;
   document.getElementById('pd').textContent = userPearls;
@@ -1395,7 +1235,6 @@ function switchTab(tab){
   document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('bn-'+tab).classList.add('active');
   syncPoints();
-  if(tab==='game'){ setTimeout(()=>{ resize(); requestAnimationFrame(loop); },50); }
   if(tab==='shop'){ syncPoints(); renderGoods2(); }
   if(tab==='profile'){
     refreshPointsFromAPI(); // 切换时从后端拉最新积分
@@ -1464,521 +1303,308 @@ let straightProgress=0, straightDuration=0, straightStartX=0, straightEndX=0, st
 let entryX=0, entryY=0;
 let TUBE_COL_W=36;
 
-const canvas=document.getElementById('gc'),cwrap=document.getElementById('cwrap'),ctx=canvas.getContext('2d');
-let CW=0,CH=0;
+const canvas=document.getElementById('gc'), cwrap=document.getElementById('cwrap'), ctx=canvas.getContext('2d');
+let CW=0, CH=0;
 
 function resize(){
-  if(!canvas||!cwrap) return;
   CW=cwrap.clientWidth; CH=cwrap.clientHeight;
-  if(CW<10||CH<10) return; // 隐藏状态跳过
   canvas.width=CW; canvas.height=CH;
   buildWorld();
 }
 
 
-const {Engine,Bodies,Body,World,Events}=Matter;
-const engine=Engine.create({gravity:{y:0.28}});
-const world=engine.world;
-const pegPos=[];
+// ══════════════════════════════════════════════════════
+// 老虎机核心引擎
+// ══════════════════════════════════════════════════════
+const SYMBOLS = ['7️⃣','💎','🍒','⭐','🍋','🔔','🍇','🍊'];
+const PAYOUTS = {
+  '7️⃣': 50, '💎': 20, '🍒': 10, '⭐': 5, '🍋': 3, '🔔': 2, '🍇': 2, '🍊': 2
+};
+// 每个符号的权重（越大越容易出现）
+const BASE_WEIGHTS = [1, 2, 6, 8, 10, 10, 10, 10]; // 对应 SYMBOLS
 
-// Physical dimensions
-const SLOT_H=20;
-const ENTRY_X_RATIO=0.92; // entry point near right top
+let slotBet       = 5;
+let slotSpinning  = false;
+let autoSpinOn    = false;
+let autoSpinTimer = null;
+let reelResults   = [0,0,0]; // 当前各列中心符号索引
 
-function buildWorld(){
-  if(!CW||!CH) return;
-  World.clear(world); Engine.clear(engine);
-  activeBalls=[]; launchBallBody=null; pegPos.length=0;
+// ── 获取后台概率权重 ────────────────────────────────────
+function getSlotWeights() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem('bzm_game_config') || '{}');
+    if (Array.isArray(cfg.slotWeights) && cfg.slotWeights.length === SYMBOLS.length)
+      return cfg.slotWeights;
+  } catch(e) {}
+  return [...BASE_WEIGHTS];
+}
 
-  const ROWS=12;
-  const slotW=CW/NUM_SLOTS;
-  const pegTop=CH*0.06;
-  const pegBot=CH-SLOT_H-CH*0.05;
-  const spacingY=(pegBot-pegTop)/ROWS;
-  const spacingX=CW/(ROWS+1);
-  const PEG_R=Math.max(3.5,Math.min(5,CW*0.011));
-
-  for(let r=0;r<ROWS;r++){
-    const even=r%2===0, cols=even?ROWS:ROWS-1;
-    const startX=even?spacingX:spacingX*1.5;
-    for(let c=0;c<cols;c++){
-      const x=startX+c*spacingX, y=pegTop+r*spacingY;
-      pegPos.push({x,y,r:PEG_R});
-      World.add(world,Bodies.circle(x,y,PEG_R,{
-        isStatic:true,restitution:0.44,friction:0.01,
-        collisionFilter:{category:2,mask:1},label:'peg'
-      }));
-    }
+// ── 加权随机选符号 ──────────────────────────────────────
+function weightedRandom(weights) {
+  const total = weights.reduce((a,b) => a+b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return i;
   }
+  return weights.length - 1;
+}
 
-  // walls
-  const wo={isStatic:true,friction:0,restitution:0.25,collisionFilter:{category:2,mask:1}};
-  World.add(world,[
-    Bodies.rectangle(-6,CH/2,12,CH*2,wo),
-    Bodies.rectangle(CW+6,CH/2,12,CH*2,wo),
-  ]);
-
-  // slot dividers
-  const divTop=CH-SLOT_H-8;
-  for(let i=1;i<NUM_SLOTS;i++)
-    World.add(world,Bodies.rectangle(i*slotW,divTop+14,2,30,{
-      isStatic:true,friction:0,restitution:0.04,
-      collisionFilter:{category:2,mask:1}
-    }));
-
-  // slot sensors
-  for(let i=0;i<NUM_SLOTS;i++)
-    World.add(world,Bodies.rectangle(i*slotW+slotW/2,CH-SLOT_H/2,slotW-3,SLOT_H,{
-      isStatic:true,isSensor:true,
-      collisionFilter:{category:4,mask:1},label:'slot_'+i
-    }));
-
-  Events.on(engine,'collisionStart',ev=>{
-    ev.pairs.forEach(({bodyA,bodyB})=>{
-      const ball=[bodyA,bodyB].find(b=>b.label==='ball'&&!b._rising);
-      const sen=[bodyA,bodyB].find(b=>b.label&&b.label.startsWith('slot_'));
-      if(ball&&sen&&!ball._done){ball._done=true;onLand(ball,parseInt(sen.label.split('_')[1]));}
+// ── 初始化滚轮 ──────────────────────────────────────────
+function initReels() {
+  for (let col = 0; col < 3; col++) {
+    const strip = document.getElementById('strip-' + col);
+    strip.innerHTML = '';
+    // 每列生成20个符号循环
+    const syms = [];
+    for (let i = 0; i < 20; i++) {
+      syms.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+    }
+    syms.forEach(s => {
+      const el = document.createElement('div');
+      el.className = 'reel-symbol';
+      el.textContent = s;
+      strip.appendChild(el);
     });
+    // 定位到中间位置
+    strip.style.transform = 'translateY(-486px)'; // 9*54px
+    reelResults[col] = 9;
+  }
+}
+
+// ── 选择押注 ────────────────────────────────────────────
+function selectBet(val) {
+  slotBet = val;
+  document.querySelectorAll('.bet-chip').forEach(b => {
+    b.classList.toggle('active', +b.dataset.bet === val);
   });
-
-  buildSlotUI();
-  if(currentMult) setLit(currentMult);
+  document.getElementById('spin-cost-val').textContent = val;
 }
 
-function buildSlotUI(){
-  const d=document.getElementById('slotsrow'); d.innerHTML='';
-  for(let i=0;i<NUM_SLOTS;i++){
-    const s=document.createElement('div'); s.className='slot'; s.id='sl'+i; s.textContent='—';
-    d.appendChild(s);
+// ── SPIN主函数 ──────────────────────────────────────────
+async function doSpin() {
+  if (slotSpinning) return;
+  if (!currentUser) { gToast('请先登录'); return; }
+  if (userPearls < slotBet) { gToast('积分不足'); return; }
+
+  slotSpinning = true;
+  setSpin(false);
+
+  // 扣积分（乐观更新）
+  userPearls -= slotBet;
+  updatePointsDisplay();
+  document.getElementById('win-amount').textContent = '0';
+
+  // 算结果
+  const weights = getSlotWeights();
+  const results = [
+    weightedRandom(weights),
+    weightedRandom(weights),
+    weightedRandom(weights),
+  ];
+
+  // 后端结算
+  let serverWin = null;
+  try {
+    const res = await api.post('/api/game/slots', {
+      bet: slotBet,
+      result: results.map(i => SYMBOLS[i])
+    });
+    if (res && res.code === 200) {
+      serverWin = res.data;
+      userPearls = res.data.points_after;
+    }
+  } catch(e) {
+    // 后端失败时前端本地计算
+  }
+
+  // 播放滚动动画
+  await spinAnimation(results);
+
+  // 结算显示
+  const won = serverWin ? serverWin.win_amount : calcWin(results, slotBet);
+  if (serverWin === null) {
+    // 本地结算回退
+    userPearls += won;
+  }
+  updatePointsDisplay();
+  showSlotResult(results, won);
+
+  slotSpinning = false;
+  setSpin(true);
+
+  // 自动转
+  if (autoSpinOn) {
+    autoSpinTimer = setTimeout(doSpin, 1200);
   }
 }
 
-function setLit(mult){
-  litSlots.clear();
-  const cm={2:5,4:4,6:3,8:2,10:1};
-  const count=cm[mult]||5;
-  [...Array(NUM_SLOTS).keys()].sort(()=>Math.random()-0.5).slice(0,count).forEach(i=>litSlots.add(i));
-  for(let i=0;i<NUM_SLOTS;i++){
-    const el=document.getElementById('sl'+i);
-    if(el){el.className='slot'+(litSlots.has(i)?' lit':''); el.textContent=mult+'x';}
+// ── 本地计算中奖（后端失败时备用）──────────────────────
+function calcWin(results, bet) {
+  const syms = results.map(i => SYMBOLS[i]);
+  // 三同
+  if (syms[0] === syms[1] && syms[1] === syms[2]) {
+    return bet * (PAYOUTS[syms[0]] || 2);
   }
+  // 两同
+  if (syms[0]===syms[1] || syms[1]===syms[2] || syms[0]===syms[2]) {
+    return Math.floor(bet * 1.5);
+  }
+  return 0;
 }
 
-function onLand(ball,idx){
-  if(ballLanded) return;
-  ballLanded=true;
-  const won=litSlots.has(idx)?totalBet*currentMult:0;
-  if(won>0){
-    pearls+=won;
-    const el=document.getElementById('sl'+idx);
-    if(el){el.classList.add('wf'); setTimeout(()=>{el.classList.remove('wf');},700);}
-    floats.push({x:ball.position.x,y:ball.position.y,text:'+'+won,life:100,vy:-1.2,color:'#c85000'});
+// ── 滚动动画 ────────────────────────────────────────────
+function spinAnimation(results) {
+  return new Promise(resolve => {
+    const strips   = [0,1,2].map(i => document.getElementById('strip-' + i));
+    const cols     = [0,1,2].map(i => document.getElementById('reel-' + i));
+    const duration = [800, 1000, 1200]; // 三列停止时间错开
+    const spinSpeed = 28; // px per frame
+
+    let startTime = null;
+    let stopped   = [false, false, false];
+
+    // 各列目标位移：让目标符号停到中心行（第2行，y = index*54 - 54）
+    const targetOffsets = results.map(r => -(r * 54 - 54));
+
+    // 快速滚动阶段：随机移动
+    let currentY = [
+      parseInt(strips[0].style.transform.replace('translateY(','')) || -486,
+      parseInt(strips[1].style.transform.replace('translateY(','')) || -486,
+      parseInt(strips[2].style.transform.replace('translateY(','')) || -486,
+    ];
+
+    function frame(ts) {
+      if (!startTime) startTime = ts;
+      const elapsed = ts - startTime;
+
+      for (let col = 0; col < 3; col++) {
+        if (stopped[col]) continue;
+
+        if (elapsed < duration[col]) {
+          // 滚动中：快速向下（循环）
+          currentY[col] -= spinSpeed;
+          // 循环：超出范围则跳回
+          const totalH = 20 * 54;
+          if (Math.abs(currentY[col]) >= totalH) {
+            currentY[col] += totalH;
+          }
+          strips[col].style.transform = `translateY(${currentY[col]}px)`;
+          strips[col].style.transition = 'none';
+        } else {
+          // 停止：弹性过渡到目标
+          stopped[col] = true;
+          strips[col].style.transition = 'transform 0.35s cubic-bezier(.25,1.6,.5,1)';
+          strips[col].style.transform  = `translateY(${targetOffsets[col]}px)`;
+          reelResults[col] = results[col];
+        }
+      }
+
+      if (stopped.every(s => s)) {
+        setTimeout(resolve, 400);
+      } else {
+        requestAnimationFrame(frame);
+      }
+    }
+
+    requestAnimationFrame(frame);
+  });
+}
+
+// ── 显示结算结果 ────────────────────────────────────────
+function showSlotResult(results, won) {
+  const syms = results.map(i => SYMBOLS[i]);
+
+  if (won > 0) {
+    // 高亮中奖列
+    for (let col = 0; col < 3; col++) {
+      const colEl = document.getElementById('reel-' + col);
+      colEl.classList.add('win-flash');
+      setTimeout(() => colEl.classList.remove('win-flash'), 1400);
+    }
+    // 中心符号跳动
+    setTimeout(() => {
+      [0,1,2].forEach(col => {
+        const strip = document.getElementById('strip-' + col);
+        const centerSym = strip.children[results[col]];
+        if (centerSym) { centerSym.classList.add('center-win'); setTimeout(()=>centerSym.classList.remove('center-win'),1500); }
+      });
+    }, 200);
+
+    // 金额弹出
+    const winEl = document.getElementById('win-amount');
+    winEl.textContent = '+' + won;
+    winEl.classList.add('pop');
+    setTimeout(() => winEl.classList.remove('pop'), 500);
+
+    // 公告
+    const isJackpot = syms[0]==='7️⃣' && syms[1]==='7️⃣' && syms[2]==='7️⃣';
+    if (isJackpot) {
+      showSlotAnnounce('🎰 JACKPOT！+' + won + ' 积分！');
+      document.getElementById('slots-machine').classList.add('jackpot-bg');
+      setTimeout(() => document.getElementById('slots-machine').classList.remove('jackpot-bg'), 2200);
+      spawnCoins();
+    } else if (won >= slotBet * 10) {
+      showSlotAnnounce('🔥 大奖！+' + won + ' 积分！');
+      spawnCoins();
+    } else {
+      showSlotAnnounce('🎉 中奖 +' + won);
+    }
+    playSound('win');
   } else {
-    floats.push({x:ball.position.x,y:ball.position.y,text:'未中',life:70,vy:-1,color:'#cc3300'});
+    document.getElementById('win-amount').textContent = '0';
+    playSound('miss');
   }
-  updateUI();
-  setTimeout(()=>{try{World.remove(world,ball);}catch(e){}activeBalls=activeBalls.filter(b=>b!==ball);},900);
-  setTimeout(()=>showResult(won),1400);
+
+  syncPoints();
 }
 
-// ── FLOW ────────────────────────────────────────────────
-function doBuy(){
-  if(pearls<COST_BASE){setTip('积分不足，请充值！');return;}
-  pearls-=COST_BASE;
-  baseBet=COST_BASE; extraBet=0; totalBet=COST_BASE;
-  ballFired=false; ballLanded=false; currentMult=0;
-  updateUI(); goPhase('step2');
+function showSlotAnnounce(msg) {
+  const el = document.getElementById('slot-announce');
+  el.innerHTML = '';
+  const d = document.createElement('div');
+  d.className = 'slot-announce-msg';
+  d.textContent = msg;
+  el.appendChild(d);
+  setTimeout(() => el.innerHTML = '', 2000);
 }
 
-function doConfirm(){
-  if(spinning) return;
-  document.getElementById('btn-confirm').disabled=true;
-  spinning=true;
-  let ticks=0, total=14+Math.floor(Math.random()*8);
-  const iv=setInterval(()=>{
-    const ri=Math.floor(Math.random()*5);
-    document.querySelectorAll('.ms').forEach((el,i)=>el.className='ms'+(i===ri?' spin':''));
-    ticks++;
-    if(ticks>=total){
-      clearInterval(iv);
-      let r=Math.random()*100,acc=0,chosen=0;
-      for(let i=0;i<5;i++){acc+=MULT_W[i];if(r<acc){chosen=i;break;}}
-      document.querySelectorAll('.ms').forEach((el,i)=>el.className='ms'+(i===chosen?' active':''));
-      currentMult=MULTS[chosen];
-      setLit(currentMult);
-      document.getElementById('mtv').textContent=currentMult+'x';
-      showAnnounce(currentMult+'x 倍率！');
-      spinning=false;
-      setTimeout(()=>goPhase('step3'),700);
-    }
-  },75);
-}
-
-function addOne(){
-  if(pearls<1){setTip('积分不足');return;}
-  pearls-=1; extraBet+=1; totalBet=baseBet+extraBet;
-  updateS3(); updateUI();
-}
-function addCustom(){
-  const v=parseInt(document.getElementById('jinput').value)||0;
-  if(v<=0){setTip('请输入有效积分数');return;}
-  const actual=Math.min(v,pearls);
-  if(actual<=0){setTip('积分不足');return;}
-  pearls-=actual; extraBet+=actual; totalBet=baseBet+extraBet;
-  if(actual<v) setTip('积分不足，已加注'+actual+'积分');
-  updateS3(); updateUI();
-}
-function updateS3(){
-  document.getElementById('nb').textContent=totalBet;
-  document.getElementById('nm').textContent=currentMult;
-  document.getElementById('nw').textContent=totalBet*currentMult;
-  document.getElementById('jze').textContent=extraBet;
-  document.getElementById('jzt').textContent=totalBet;
-}
-function doSkip(){
-  goPhase('step4');
-  const fb=document.getElementById('firebtn');
-  if(fb) fb.classList.remove('off');
-}
-function doGoShoot(){
-  goPhase('step4');
-  const fb=document.getElementById('firebtn');
-  if(fb) fb.classList.remove('off');
-}
-
-function showResult(won){
-  totalRounds++;
-  const net=won-totalBet;
-  document.getElementById('rico').textContent=won>0?'🎉':'😔';
-  document.getElementById('rtitle').textContent=won>0?'恭喜中奖！':'本局未中奖';
-  document.getElementById('rdetail').innerHTML=
-    '赌注 <b>'+totalBet+'</b>　倍率 <b>'+currentMult+'x</b><br>'+
-    (won>0?'获得 <b class="pos">+'+won+'</b>':'未落亮槽')+
-    '　净收益 <b class="'+(net>=0?'pos':'neg')+'">'+(net>=0?'+':'')+net+'</b>';
-  updateUI(); goPhase('result');
-}
-
-function nextRound(){
-  extraBet=0; totalBet=COST_BASE; currentMult=0; ballState='waiting';
-  document.getElementById('mtv').textContent='?';
-  document.querySelectorAll('.ms').forEach(el=>el.className='ms');
-  for(let i=0;i<NUM_SLOTS;i++){const el=document.getElementById('sl'+i);if(el){el.className='slot';el.textContent='—';}}
-  litSlots.clear(); setPow(0); goPhase('step1');
-}
-
-// ── PHASE ────────────────────────────────────────────────
-function goPhase(p){
-  phase=p;
-  ['s1','s2','s3','s4','s5'].forEach(id=>document.getElementById(id).style.display='none');
-  const order=['step1','step2','step3','step4','result'];
-  const idx=order.indexOf(p);
-  ['stp1','stp2','stp3','stp4'].forEach((id,i)=>{
-    document.getElementById(id).className='stp'+(i===idx?' cur':i<idx?' done':'');
-  });
-  const fb=document.getElementById('firebtn');
-  if(p==='step1'){document.getElementById('s1').style.display='block'; fb.classList.add('off');}
-  else if(p==='step2'){document.getElementById('s2').style.display='block'; document.getElementById('btn-confirm').disabled=false; fb.classList.add('off');}
-  else if(p==='step3'){document.getElementById('s3').style.display='block'; updateS3(); fb.classList.add('off');}
-  else if(p==='step4'){
-    document.getElementById('s4').style.display='block';
-    const cm={2:5,4:4,6:3,8:2,10:1};
-    document.getElementById('s4b').textContent=totalBet+' 积分';
-    document.getElementById('s4m').textContent=currentMult+'x';
-    document.getElementById('s4w').textContent=(totalBet*currentMult)+' 积分';
-    document.getElementById('s4l').textContent=(cm[currentMult]||'?')+' / '+NUM_SLOTS;
-    fb.classList.remove('off');
-    ballState='waiting';
-  }
-  else if(p==='result'){document.getElementById('s5').style.display='block'; fb.classList.add('off');}
-  updateUI();
-}
-
-// ── FIRE BUTTON ──────────────────────────────────────────
-const firebtn=document.getElementById('firebtn');
-let pressStart=0;
-let risingBall=null;  // kinematic rising ball (not physics yet)
-// launch vars now in new state machine
-
-function startPress(e){
-  e.preventDefault();
-  if(phase!=='step4'){setTip('请先完成前面步骤');return;}
-  if(ballFired){setTip('本局已发射');return;}
-  pressing=true; power=0; setPow(0); pressStart=Date.now();
-  firebtn.classList.add('pressing');
-  pressTimer=setInterval(()=>setPow(Math.min(100,(Date.now()-pressStart)/1000*80)),25);
-}
-
-function endPress(e){
-  if(e) e.preventDefault();
-  if(!pressing) return;
-  pressing=false; clearInterval(pressTimer);
-  firebtn.classList.remove('pressing');
-  if(power>2){
-    ballFired=true;
-    firebtn.classList.add('off');
-    startLaunch();
-  }
-  setTimeout(()=>setPow(0),300);
-}
-
-firebtn.addEventListener('mousedown',startPress);
-firebtn.addEventListener('touchstart',startPress,{passive:false});
-firebtn.addEventListener('mouseup',endPress);
-firebtn.addEventListener('touchend',endPress,{passive:false});
-document.addEventListener('mouseup',()=>{if(pressing)endPress(null);});
-document.addEventListener('touchend',()=>{if(pressing)endPress(null);});
-
-function setPow(p){
-  power=Math.max(0,Math.min(100,p));
-  document.getElementById('pfill').style.height=power+'%';
-  document.getElementById('pval').textContent=Math.round(power)+'%';
-}
-
-// ── LAUNCH SEQUENCE ──────────────────────────────────────
-// Phase 1: ball rises along right track (kinematic, no physics)
-// Phase 2: ball enters from top-right, physics takes over
-
-function startLaunch(){
-  ballState='rising';
-  // 起点：右侧轨道底部
-  ballDrawX = CW - 8;
-  ballDrawY = CH * 0.86;
-  // 上升速度
-  riseSpeed = 3.5 + power * 0.025;
-  // 入场点：顶部，力度越大越偏左
-  entryX = CW * (0.88 - (power/100)*0.55);
-  entryY = CH * 0.04;
-}
-
-
-
-function updateLaunch(){
-  if(ballState==='rising'){
-    ballDrawY -= riseSpeed;
-    ballDrawX = CW-8;
-    // Reached top — start quarter-circle arc
-    if(ballDrawY <= CH*0.06){
-      ballState='arcing';
-      arcProgress=0;
-      // Quarter circle: center at (CW-8, CH*0.06)
-      // radius = half tube width ≈ enough to swing 90° from up→left
-      arcRadius = CW*0.07 + power*0.3;   // bigger power = bigger arc radius = enters more to the left
-      arcCenterX = ballDrawX - arcRadius; // center is to the left of track
-      arcCenterY = ballDrawY;             // center at same height as top of rise
-      arcStartAngle = 0;                  // 0 = right (3 o'clock)
-      arcEndAngle = -Math.PI/2;           // -90° = up... we go from right→up→left
-      // actually: ball comes from below (angle=90° from center = down from center)
-      // center is LEFT of ball, so ball is at angle=0 (east)
-      // we sweep counter-clockwise (negative) to angle=90 (north from center = top)
-      // then the exit is at angle=90 from center pointing LEFT = (cx-r, cy) wait...
-      // Let's think: center=(cx,cy), ball starts at (cx+r, cy) = track X
-      // sweep from 0 to -PI/2 (CCW) ends at (cx, cy-r) = top
-      // That puts ball at top going left — perfect
-      arcDuration=18;
-    }
-  } else if(ballState==='arcing'){
-    arcProgress += 1/arcDuration;
-    if(arcProgress>=1) arcProgress=1;
-    const angle = arcStartAngle + (arcEndAngle - arcStartAngle)*arcProgress;
-    ballDrawX = arcCenterX + arcRadius*Math.cos(angle);
-    ballDrawY = arcCenterY + arcRadius*Math.sin(angle);
-    if(arcProgress>=1){
-      // Arc done — now go straight LEFT along the top
-      ballState='straight';
-      straightProgress=0;
-      straightY=ballDrawY;
-      straightStartX=ballDrawX;
-      // Straight line ends at entry point X
-      straightEndX=entryX;
-      const dist=Math.abs(straightStartX-straightEndX);
-      // Speed same as rise speed so it feels continuous
-      straightDuration=Math.max(10, Math.round(dist/riseSpeed));
-    }
-  } else if(ballState==='straight'){
-    straightProgress += 1/straightDuration;
-    if(straightProgress>=1) straightProgress=1;
-    ballDrawX = straightStartX + (straightEndX-straightStartX)*straightProgress;
-    ballDrawY = straightY;
-    if(straightProgress>=1){
-      ballState='entered';
-      spawnPhysicsBall(ballDrawX, ballDrawY+4);
-    }
+function spawnCoins() {
+  const count = 14;
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'coin-particle';
+      el.textContent = ['🪙','💰','⭐','✨'][Math.floor(Math.random()*4)];
+      el.style.left  = (20 + Math.random() * 60) + 'vw';
+      el.style.top   = (10 + Math.random() * 30) + 'vh';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1500);
+    }, i * 80);
   }
 }
 
-function spawnPhysicsBall(x,y){
-  const BR=Math.max(6,Math.min(8,CW*0.022));
-  const ball=Bodies.circle(x,y,BR,{
-    restitution:0.40,friction:0.02,frictionAir:0.010,
-    label:'ball',_done:false,_rising:false,
-    collisionFilter:{category:1,mask:6},density:0.003
-  });
-  // Initial velocity: slight leftward + downward
-  const vx=-0.4-(power/100)*1.2;
-  Body.setVelocity(ball,{x:vx,y:0.8});
-  World.add(world,ball);
-  activeBalls.push(ball);
+function setSpin(enabled) {
+  const btn = document.getElementById('spin-btn');
+  if (btn) btn.classList.toggle('disabled', !enabled);
 }
 
-// ── GAME LOOP ────────────────────────────────────────────
-function loop(){
-  updateLaunch();
-  Engine.update(engine,16.67);
-  activeBalls.forEach(b=>{
-    if((b.position.y>CH+60||b.position.x<-80||b.position.x>CW+80)&&!b._done){
-      b._done=true;
-      try{World.remove(world,b);}catch(e){}
-      activeBalls=activeBalls.filter(x=>x!==b);
-      if(!ballLanded){ballLanded=true;setTimeout(()=>showResult(0),400);}
-    }
-  });
-  draw();
-  requestAnimationFrame(loop);
+function toggleAuto() {
+  autoSpinOn = !autoSpinOn;
+  const btn = document.getElementById('auto-btn');
+  if (btn) btn.classList.toggle('active', autoSpinOn);
+  document.getElementById('auto-count-show').textContent = autoSpinOn ? '自动旋转中' : '';
+  if (!autoSpinOn) { clearTimeout(autoSpinTimer); }
+  else if (!slotSpinning) doSpin();
 }
 
-// ── DRAW ─────────────────────────────────────────────────
-function draw(){
-  ctx.clearRect(0,0,CW,CH);
+// ── 兼容旧代码接口 ──────────────────────────────────────
+function updatePointsDisplay() { syncPoints(); }
+function openGame() {}
+function buildWorld() { initReels(); }
+function resize() {}
+function setTip(t) {}
 
-  // warm background
-  const bg=ctx.createLinearGradient(0,0,0,CH);
-  bg.addColorStop(0,'#fff5c0'); bg.addColorStop(1,'#ffe870');
-  ctx.fillStyle=bg; ctx.fillRect(0,0,CW,CH);
-
-  const slotW=CW/NUM_SLOTS;
-
-  // subtle lit column hint (very light)
-  litSlots.forEach(i=>{
-    ctx.fillStyle='rgba(255,80,0,0.05)';
-    ctx.fillRect(i*slotW,0,slotW,CH-SLOT_H);
-  });
-
-  // pegs - mushroom style
-  pegPos.forEach(p=>{
-    const r=p.r;
-    // shadow
-    ctx.beginPath(); ctx.arc(p.x+1,p.y+1.5,r,0,Math.PI*2);
-    ctx.fillStyle='rgba(160,90,0,0.18)'; ctx.fill();
-    // cap gradient
-    const pg=ctx.createRadialGradient(p.x-r*0.3,p.y-r*0.4,r*0.1,p.x,p.y,r);
-    pg.addColorStop(0,'#ffe060'); pg.addColorStop(0.55,'#e8a010'); pg.addColorStop(1,'#c07000');
-    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
-    ctx.fillStyle=pg; ctx.fill();
-    ctx.strokeStyle='rgba(190,120,0,0.5)'; ctx.lineWidth=0.7; ctx.stroke();
-    // shine
-    ctx.beginPath(); ctx.ellipse(p.x-r*0.25,p.y-r*0.28,r*0.28,r*0.2,-0.3,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,200,0.52)'; ctx.fill();
-    // stem
-    ctx.fillStyle='rgba(190,120,0,0.45)';
-    ctx.fillRect(p.x-r*0.22,p.y+r*0.75,r*0.44,r*0.55);
-  });
-
-  // slot dividers
-  for(let i=1;i<NUM_SLOTS;i++){
-    ctx.fillStyle='rgba(180,100,0,0.45)';
-    ctx.fillRect(i*slotW-1,CH-SLOT_H-8,2,10);
-  }
-
-  // track drawn by vtube CSS element
-
-  // entry point marker (top right)
-  if(phase==='step4'){
-    const ex=entryX||CW*0.6, ey=entryY||CH*0.03;
-    // show estimated entry zone when power > 0
-    if(power>2){
-      const exCur=CW*(0.95-(power/100)*0.65);
-      ctx.beginPath(); ctx.arc(exCur,CH*0.04,5,0,Math.PI*2);
-      ctx.fillStyle='rgba(255,100,0,0.4)'; ctx.fill();
-    }
-  }
-
-  // RISING BALL (kinematic, right side track)
-  if(ballState==='rising'){
-    const BR=Math.max(6,Math.min(8,CW*0.022));
-    const bx=CW-8, by=ballDrawY||CH*0.86;
-    const pulse=0.5+0.5*Math.sin(Date.now()/120);
-    ctx.beginPath(); ctx.arc(bx,by,BR+4+pulse*2,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,140,0,'+(0.15+pulse*0.15)+')'; ctx.fill();
-    ctx.beginPath(); ctx.arc(bx+2,by+2,BR,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
-    drawBall(ctx,bx,by,BR);
-  }
-  // ARCING BALL (bezier curve transition from track top to peg entry)
-  if(ballState==='arcing'){
-    const BR=Math.max(6,Math.min(8,CW*0.022));
-    const bx=ballDrawX, by=ballDrawY;
-    // draw arc trail
-    ctx.save();
-    ctx.strokeStyle='rgba(255,200,100,0.35)';
-    ctx.lineWidth=BR*1.4;
-    ctx.lineCap='round';
-    ctx.beginPath();
-    ctx.moveTo(arcCenterX+arcRadius, arcCenterY);
-    // arc trail handled in new draw block
-    ctx.stroke();
-    ctx.restore();
-    // glow
-    const pulse=0.5+0.5*Math.sin(Date.now()/100);
-    ctx.beginPath(); ctx.arc(bx,by,BR+3+pulse*2,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,160,0,'+(0.2+pulse*0.2)+')'; ctx.fill();
-    ctx.beginPath(); ctx.arc(bx+2,by+2,BR,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
-    drawBall(ctx,bx,by,BR);
-  }
-
-  // WAITING BALL at bottom right
-  if(phase==='step4'&&!ballFired){
-    const BR=Math.max(6,Math.min(8,CW*0.022));
-    const bx=CW-8, by=CH*0.86;
-    const pulse=0.5+0.5*Math.sin(Date.now()/280);
-    ctx.beginPath(); ctx.arc(bx,by,BR+5+pulse*3,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,150,0,'+(0.2+pulse*0.2)+')'; ctx.fill();
-    ctx.beginPath(); ctx.arc(bx+2,by+2,BR,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
-    drawBall(ctx,bx,by,BR);
-  }
-
-  // PHYSICS BALLS
-  const BR=Math.max(6,Math.min(8,CW*0.022));
-  activeBalls.forEach(b=>{
-    const p=b.position;
-    ctx.beginPath(); ctx.arc(p.x+2,p.y+2.5,BR,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
-    drawBall(ctx,p.x,p.y,BR);
-  });
-
-  // floats
-  for(let i=floats.length-1;i>=0;i--){
-    const f=floats[i]; f.y+=f.vy; f.life--;
-    if(f.life<=0){floats.splice(i,1);continue;}
-    ctx.globalAlpha=Math.min(1,f.life/55);
-    ctx.font='bold 16px sans-serif'; ctx.textAlign='center';
-    ctx.strokeStyle='rgba(255,230,150,0.8)'; ctx.lineWidth=3;
-    ctx.strokeText(f.text,f.x,f.y);
-    ctx.fillStyle=f.color; ctx.fillText(f.text,f.x,f.y);
-    ctx.globalAlpha=1;
-  }
-}
-
-function drawBall(ctx,x,y,r){
-  const g=ctx.createRadialGradient(x-r*0.35,y-r*0.35,r*0.05,x,y,r);
-  g.addColorStop(0,'#ffffff');
-  g.addColorStop(0.3,'#f0f0ff');
-  g.addColorStop(0.7,'#c0c0d8');
-  g.addColorStop(1,'#9090b0');
-  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
-  ctx.fillStyle=g; ctx.fill();
-  ctx.strokeStyle='rgba(160,160,200,0.45)'; ctx.lineWidth=0.8; ctx.stroke();
-}
-
-// ── HELPERS ──────────────────────────────────────────────
-function openGame(){document.getElementById('overlay').classList.add('hidden');}
-
-
-// v18引擎别名兼容
-function doLaunch(){ startLaunch(); }
-function spawnBall(x,y){ spawnPhysicsBall(x,y); }
-function gameLoop(){ loop(); }
 function setTip(t){const el=document.getElementById('tip');el.textContent=t;if(t)setTimeout(()=>{if(el.textContent===t)el.textContent='';},2500);}
 function showAnnounce(txt){const el=document.getElementById('announce');el.textContent=txt;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',1500);}
 function openGame(){
@@ -2374,12 +2000,9 @@ async function loadAddressesFromAPI(){
         detail: a.detail,
         isDefault: a.is_default
       }));
-      // 只在还没有选中地址时才自动选默认
-      if(!selectedAddrId2 || !addresses.find(a=>String(a.id)===String(selectedAddrId2))){
-        const def = addresses.find(a=>a.isDefault);
-        if(def) selectedAddrId2 = String(def.id);
-        else selectedAddrId2 = String(addresses[0].id);
-      }
+      const def = addresses.find(a=>a.isDefault);
+      if(def) selectedAddrId2 = String(def.id);
+      else selectedAddrId2 = String(addresses[0].id);
     }
   }catch(e){ console.error('加载地址失败',e); }
 }
@@ -2392,13 +2015,12 @@ async function renderAddrList2(){
 function _renderAddrList2Inner(){
   const list=document.getElementById('addr-list2');
   list.innerHTML=addresses.map(a=>`<div class="addr-card ${String(a.id)===String(selectedAddrId2)?'sel':''}" onclick="selectAddr2('${a.id}')">
-    <div class="ac-check">${String(a.id)===String(selectedAddrId2)?'✓':''}</div>
+    <div class="ac-check">${a.id===selectedAddrId2?'✓':''}</div>
     <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
       <span class="ac-name">${a.name}</span><span class="ac-phone">${a.phone}</span>
       ${a.isDefault?'<span class="ac-default-tag">默认</span>':''}
     </div>
     <div class="ac-region">${a.region} ${a.detail}</div>
-    <button class="ac-del-btn" onclick="event.stopPropagation();deleteAddr2('${a.id}')">🗑 删除</button>
   </div>`).join('');
   list.innerHTML+=`<div class="add-addr-card" onclick="shopGoto('sp-add-addr')">＋ 新增收货地址</div>`;
   document.getElementById('addr-confirm-btn2').disabled=!selectedAddrId2;
@@ -2406,77 +2028,7 @@ function _renderAddrList2Inner(){
     selectedAddrId2=String(addresses[0].id);
   }
 }
-function selectAddr2(id){selectedAddrId2=String(id);_renderAddrList2Inner();}
-
-async function deleteAddr2(id){
-  if(!confirm('确认删除这个收货地址？')) return;
-  const addr = addresses.find(a=>String(a.id)===String(id));
-  if(!addr) return;
-  try {
-    const res = await api.delete('/api/address/delete/' + id);
-    if(res && res.code===200){
-      addresses = addresses.filter(a=>String(a.id)!==String(id));
-      if(String(selectedAddrId2)===String(id)){
-        const def = addresses.find(a=>a.isDefault);
-        selectedAddrId2 = def ? String(def.id) : (addresses.length>0 ? String(addresses[0].id) : null);
-      }
-      gToast('地址已删除');
-      _renderAddrList2Inner();
-    } else {
-      // 后端失败也删本地
-      addresses = addresses.filter(a=>String(a.id)!==String(id));
-      if(String(selectedAddrId2)===String(id)) selectedAddrId2 = addresses.length>0 ? String(addresses[0].id) : null;
-      gToast('地址已删除');
-      _renderAddrList2Inner();
-    }
-  } catch(e){
-    addresses = addresses.filter(a=>String(a.id)!==String(id));
-    if(String(selectedAddrId2)===String(id)) selectedAddrId2 = addresses.length>0 ? String(addresses[0].id) : null;
-    gToast('地址已删除');
-    _renderAddrList2Inner();
-  }
-}
-
-function showCSContact(){
-  showGSheet('📢 联系客服',
-    `<div style="font-size:12px;color:#999;margin-bottom:14px;">添加客服后发送"波珠机"即可领取100积分</div>
-    <div onclick="copyText('690930887')" style="background:#f0f7ff;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid #d0e8ff;margin-bottom:10px;">
-      <span style="font-size:22px;">💬</span>
-      <div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#1677ff;">QQ 客服</div><div style="font-size:15px;font-weight:800;color:#1a1a1a;">690930887</div></div>
-      <span style="font-size:12px;color:#1677ff;">点击复制</span>
-    </div>
-    <div onclick="copyText('18973118740')" style="background:#f0fff4;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid #c3eecf;margin-bottom:14px;">
-      <span style="font-size:22px;">💚</span>
-      <div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#07c160;">微信客服</div><div style="font-size:15px;font-weight:800;color:#1a1a1a;">18973118740</div></div>
-      <span style="font-size:12px;color:#07c160;">点击复制</span>
-    </div>
-    <div style="background:#fff8f0;border-radius:10px;padding:10px 14px;font-size:12px;color:#ff6b35;line-height:1.6;border:1px solid #ffe0c8;margin-bottom:14px;">
-      🎁 添加客服后发送"波珠机"，审核后发放 <b>100积分</b>
-    </div>
-    <button onclick="closeGSheet();setTimeout(claimCSBonus,200)" style="width:100%;height:44px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
-      ✅ 我已添加客服，申请领取积分
-    </button>`
-  );
-}
-
-function copyText(txt){
-  navigator.clipboard.writeText(txt).then(()=>gToast('已复制：'+txt)).catch(()=>{
-    const el=document.createElement('input');el.value=txt;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);gToast('已复制：'+txt);
-  });
-}
-
-async function claimCSBonus(){
-  if(!currentUser){gToast('请先登录');return;}
-  const res = await api.post('/api/user/cs-bonus', {});
-  if(!res) return;
-  if(res.code===200){
-    userPearls = res.data.points;
-    updatePointsDisplay();
-    gToast('🎉 领取成功！+100积分已到账');
-  } else {
-    gToast(res.msg || '领取失败，请联系客服确认');
-  }
-}
+function selectAddr2(id){selectedAddrId2=String(id);renderAddrList2();}
 
 async function saveAddr2(){
   const name=document.getElementById('new-name2').value.trim();
@@ -2502,7 +2054,7 @@ async function saveAddr2(){
 }
 
 function renderConfirm2(){
-  const g=currentGoods2, addr=addresses.find(a=>String(a.id)===String(selectedAddrId2));
+  const g=currentGoods2, addr=addresses.find(a=>a.id===selectedAddrId2);
   document.getElementById('submit-pts2').textContent=g.pts.toLocaleString();
   document.getElementById('confirm-wrap2').innerHTML=`
     <div class="confirm-sec"><div class="csec-title">兑换商品</div>
@@ -2654,8 +2206,6 @@ function updateNextBtn(){
 
 // 自定义金额输入
 document.addEventListener('DOMContentLoaded',()=>{
-  initCanvas();
-  setTimeout(resize, 100);
   const inp=document.getElementById('custom-amount');
   if(inp){
     inp.addEventListener('input',()=>{
@@ -3055,13 +2605,14 @@ function bindRegInputs(){
   }
 }
 
-buildSlotUI(); goPhase('step1'); syncPoints(); renderGoods2();
+syncPoints(); renderGoods2();
 
 window.addEventListener('resize',()=>setTimeout(resize,80));
 setTimeout(()=>{
+  initReels();
   resize();
-  requestAnimationFrame(loop);
-  checkAuth();
+  requestAnimationFrame(gameLoop);
+  checkAuth(); // 检查登录状态
 },150);
 </script>
 </body>
