@@ -1721,8 +1721,8 @@ function onLandAnim(idx) {
   } else {
     playSound('miss');
   }
-  // 调用后端结算
-  settleBall(idx).catch(e => console.error('结算失败', e));
+  // 调用后端结算（失败不影响前端流程）
+  if(typeof settleBall === 'function') settleBall(idx).catch(e => console.error('结算失败', e));
   setTimeout(() => showResult(won), 1200);
 }
 
