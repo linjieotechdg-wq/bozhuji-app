@@ -1292,11 +1292,15 @@ let userPearls = 1000;  // 全局积分，游戏和商城共用
 function doSkip(){
   goPhase('step4');
   updateS4();
+  const fb=document.getElementById('firebtn');
+  if(fb) fb.classList.remove('off');
 }
 
 function doGoShoot(){
   goPhase('step4');
   updateS4();
+  const fb=document.getElementById('firebtn');
+  if(fb) fb.classList.remove('off');
 }
 
 function nextRound(){
