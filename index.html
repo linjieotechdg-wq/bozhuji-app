@@ -1303,8 +1303,8 @@ let straightProgress=0, straightDuration=0, straightStartX=0, straightEndX=0, st
 let entryX=0, entryY=0;
 let TUBE_COL_W=36;
 
-const canvas=document.getElementById('gc'), cwrap=document.getElementById('cwrap'), ctx=canvas.getContext('2d');
-let CW=0, CH=0;
+// canvas已移除（老虎机不需要）
+let canvas=null, cwrap=null, ctx=null, CW=0, CH=0;
 
 function resize(){
   CW=cwrap.clientWidth; CH=cwrap.clientHeight;
@@ -2611,7 +2611,7 @@ window.addEventListener('resize',()=>setTimeout(resize,80));
 setTimeout(()=>{
   initReels();
   resize();
-  requestAnimationFrame(gameLoop);
+  // requestAnimationFrame(gameLoop); // 老虎机不需要游戏循环
   checkAuth(); // 检查登录状态
 },150);
 </script>
