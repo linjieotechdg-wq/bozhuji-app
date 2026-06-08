@@ -998,7 +998,7 @@ canvas{display:block;width:100%;height:100%;}
 </div>
 
 <!-- Matter.js -->
-<!-- Matter.js 已移除，改用纯Canvas预算法引擎 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <script>
 // ══════════════════════════════════════════════════════
 // API 客户端（连接后端真实接口）
@@ -1464,13 +1464,8 @@ let straightProgress=0, straightDuration=0, straightStartX=0, straightEndX=0, st
 let entryX=0, entryY=0;
 let TUBE_COL_W=36;
 
-let canvas, cwrap, ctx;
-let CW=0, CH=0;
-function initCanvas(){
-  canvas = document.getElementById('gc');
-  cwrap  = document.getElementById('cwrap');
-  if(canvas) ctx = canvas.getContext('2d');
-}
+const canvas=document.getElementById('gc'),cwrap=document.getElementById('cwrap'),ctx=canvas.getContext('2d');
+let CW=0,CH=0;
 
 function resize(){
   if(!canvas||!cwrap) return;
@@ -1481,405 +1476,509 @@ function resize(){
 }
 
 
-// ══════════════════════════════════════════════════════
-// 波珠机 · 纯Canvas预算法引擎 v2.0
-// 架构：先算落点 → 生成逐行碰钉路径 → Canvas逐帧播放动画
-// 结算完全基于预算落槽，视觉与结果100%一致
-// ══════════════════════════════════════════════════════
+const {Engine,Bodies,Body,World,Events}=Matter;
+const engine=Engine.create({gravity:{y:0.28}});
+const world=engine.world;
+const pegPos=[];
 
-// ── 钉板常量 ──────────────────────────────────────────
-const ROWS = 12;          // 钉板行数
-const PEG_COLS = 13;      // 每行最多钉子数
-const BALL_R = 7;         // 珠子半径(px)
+// Physical dimensions
+const SLOT_H=20;
+const ENTRY_X_RATIO=0.92; // entry point near right top
 
-// ── 物理运行时 ────────────────────────────────────────
-let pegGrid = [];         // 钉子坐标 [{x,y}]
-let ballAnim = null;      // 当前动画状态
-let animFrame = null;     // requestAnimationFrame handle
+function buildWorld(){
+  if(!CW||!CH) return;
+  World.clear(world); Engine.clear(engine);
+  activeBalls=[]; launchBallBody=null; pegPos.length=0;
 
-// ── 后台概率读取 ──────────────────────────────────────
-function getPegProbs() {
-  try {
-    const cfg = JSON.parse(localStorage.getItem('bzm_game_config') || '{}');
-    if (Array.isArray(cfg.pegProbs) && cfg.pegProbs.length === ROWS) return cfg.pegProbs;
-  } catch(e) {}
-  return Array(ROWS).fill(0.5);
-}
+  const ROWS=12;
+  const slotW=CW/NUM_SLOTS;
+  const pegTop=CH*0.06;
+  const pegBot=CH-SLOT_H-CH*0.05;
+  const spacingY=(pegBot-pegTop)/ROWS;
+  const spacingX=CW/(ROWS+1);
+  const PEG_R=Math.max(3.5,Math.min(5,CW*0.011));
 
-// ── 核心：预算落槽 + 生成完整路径 ────────────────────
-// 返回 { targetSlot, path: [{x,y,pegHit}] }
-function computePath() {
-  const probs = getPegProbs();
-  const usable = NUM_SLOTS - 1; // 排除最右回收槽
-
-  // 1. 算目标槽（分层加权随机游走）
-  let col = (usable / 2) + (Math.random() - 0.5) * usable * 0.4;
-  const colPath = [col]; // 每行后的列位置
-  for (let r = 0; r < ROWS; r++) {
-    const step = 0.5 + Math.random() * 0.5; // 每行偏移量
-    if (Math.random() < probs[r]) col += step;
-    else col -= step;
-    col = Math.max(0.3, Math.min(usable - 0.3, col));
-    colPath.push(col);
-  }
-  const targetSlot = Math.min(usable - 1, Math.max(0, Math.round(colPath[ROWS])));
-
-  // 2. 根据目标槽反算路径（让动画最终落到正确槽）
-  // 重新用目标槽约束终点
-  const finalCol = targetSlot + 0.5; // 槽中心
-  const pathCols = [colPath[0]];
-  for (let r = 0; r < ROWS; r++) {
-    // 线性插值：前几行自由随机，后几行渐渐靠向目标槽
-    const blend = Math.pow((r + 1) / ROWS, 1.5);
-    const free = colPath[r + 1];
-    const guided = finalCol + (free - finalCol) * (1 - blend * 0.7);
-    pathCols.push(guided);
-  }
-
-  // 3. 把列位置转成画布坐标
-  const slotW = CW / NUM_SLOTS;
-  const pegTop = CH * 0.04;
-  const pegBot = CH - 28;
-  const rowH = (pegBot - pegTop) / ROWS;
-
-  const path = [];
-  // 入射点
-  path.push({ x: pathCols[0] * slotW + slotW * 0.5, y: -BALL_R, pegHit: false });
-
-  for (let r = 0; r < ROWS; r++) {
-    const px = pathCols[r] * slotW + slotW * 0.5;
-    const py = pegTop + r * rowH;
-    path.push({ x: px, y: py, pegHit: true }); // 碰钉点
-    const nx = pathCols[r + 1] * slotW + slotW * 0.5;
-    const ny = pegTop + (r + 0.7) * rowH;
-    path.push({ x: nx, y: ny, pegHit: false }); // 钉后滑落点
-  }
-
-  // 落槽点
-  path.push({ x: targetSlot * slotW + slotW * 0.5, y: CH - 18, pegHit: false });
-
-  return { targetSlot, path };
-}
-
-// ── 建钉板坐标 ────────────────────────────────────────
-function buildPegGrid() {
-  pegGrid = [];
-  const PAD = CW * 0.04;           // 左右留边
-  const usableW = CW - PAD * 2;
-  const pegTop = CH * 0.05;
-  const pegBot = CH - 30;
-  const rowH = (pegBot - pegTop) / (ROWS - 1);
-  for (let r = 0; r < ROWS; r++) {
-    const even = (r % 2 === 0);
-    const cols = even ? 11 : 10;   // 奇数行11颗，偶数行10颗
-    const spacingX = usableW / (even ? 10 : 9);
-    const startX = even ? PAD : PAD + spacingX * 0.5;
-    for (let c = 0; c < cols; c++) {
-      pegGrid.push({
-        x: startX + c * spacingX,
-        y: pegTop + r * rowH
-      });
+  for(let r=0;r<ROWS;r++){
+    const even=r%2===0, cols=even?ROWS:ROWS-1;
+    const startX=even?spacingX:spacingX*1.5;
+    for(let c=0;c<cols;c++){
+      const x=startX+c*spacingX, y=pegTop+r*spacingY;
+      pegPos.push({x,y,r:PEG_R});
+      World.add(world,Bodies.circle(x,y,PEG_R,{
+        isStatic:true,restitution:0.44,friction:0.01,
+        collisionFilter:{category:2,mask:1},label:'peg'
+      }));
     }
   }
+
+  // walls
+  const wo={isStatic:true,friction:0,restitution:0.25,collisionFilter:{category:2,mask:1}};
+  World.add(world,[
+    Bodies.rectangle(-6,CH/2,12,CH*2,wo),
+    Bodies.rectangle(CW+6,CH/2,12,CH*2,wo),
+  ]);
+
+  // slot dividers
+  const divTop=CH-SLOT_H-8;
+  for(let i=1;i<NUM_SLOTS;i++)
+    World.add(world,Bodies.rectangle(i*slotW,divTop+14,2,30,{
+      isStatic:true,friction:0,restitution:0.04,
+      collisionFilter:{category:2,mask:1}
+    }));
+
+  // slot sensors
+  for(let i=0;i<NUM_SLOTS;i++)
+    World.add(world,Bodies.rectangle(i*slotW+slotW/2,CH-SLOT_H/2,slotW-3,SLOT_H,{
+      isStatic:true,isSensor:true,
+      collisionFilter:{category:4,mask:1},label:'slot_'+i
+    }));
+
+  Events.on(engine,'collisionStart',ev=>{
+    ev.pairs.forEach(({bodyA,bodyB})=>{
+      const ball=[bodyA,bodyB].find(b=>b.label==='ball'&&!b._rising);
+      const sen=[bodyA,bodyB].find(b=>b.label&&b.label.startsWith('slot_'));
+      if(ball&&sen&&!ball._done){ball._done=true;onLand(ball,parseInt(sen.label.split('_')[1]));}
+    });
+  });
+
+  buildSlotUI();
+  if(currentMult) setLit(currentMult);
 }
 
-// ── 槽位UI ────────────────────────────────────────────
-function buildSlotUI() {
-  const d = document.getElementById('slotsrow');
-  d.innerHTML = '';
-  for (let i = 0; i < NUM_SLOTS; i++) {
-    const s = document.createElement('div');
-    s.className = 'slot';
-    s.id = 'sl' + i;
-    if (i === NUM_SLOTS - 1) {
-      s.textContent = '↺';
-      s.style.background = 'rgba(100,100,100,0.3)';
-      s.style.color = 'rgba(255,255,255,0.3)';
-    } else {
-      s.textContent = '—';
-    }
+function buildSlotUI(){
+  const d=document.getElementById('slotsrow'); d.innerHTML='';
+  for(let i=0;i<NUM_SLOTS;i++){
+    const s=document.createElement('div'); s.className='slot'; s.id='sl'+i; s.textContent='—';
     d.appendChild(s);
   }
 }
 
-function setLit(mult) {
+function setLit(mult){
   litSlots.clear();
-  const count = WIN_SLOTS[mult] || Math.max(1, 6 - Math.floor(mult / 2));
-  const available = [...Array(NUM_SLOTS - 1).keys()];
-  available.sort(() => Math.random() - 0.5).slice(0, count).forEach(i => litSlots.add(i));
-  for (let i = 0; i < NUM_SLOTS; i++) {
-    const el = document.getElementById('sl' + i);
-    if (!el) continue;
-    if (i === NUM_SLOTS - 1) {
-      el.className = 'slot';
-      el.textContent = '↺';
-      el.style.background = 'rgba(100,100,100,0.3)';
-      el.style.color = 'rgba(255,255,255,0.3)';
-    } else {
-      el.className = 'slot' + (litSlots.has(i) ? ' lit' : '');
-      el.textContent = mult + 'x';
-      el.style.background = '';
-      el.style.color = '';
-    }
+  const cm={2:5,4:4,6:3,8:2,10:1};
+  const count=cm[mult]||5;
+  [...Array(NUM_SLOTS).keys()].sort(()=>Math.random()-0.5).slice(0,count).forEach(i=>litSlots.add(i));
+  for(let i=0;i<NUM_SLOTS;i++){
+    const el=document.getElementById('sl'+i);
+    if(el){el.className='slot'+(litSlots.has(i)?' lit':''); el.textContent=mult+'x';}
   }
 }
 
-// ── 动画状态机 ────────────────────────────────────────
-// ballAnim: { path, pathIdx, x, y, tx, ty, speed, done, targetSlot, particles }
-function launchBallAnim(targetSlot, path) {
-  if (animFrame) cancelAnimationFrame(animFrame);
-  ballAnim = {
-    path, pathIdx: 0,
-    x: path[0].x, y: path[0].y,
-    tx: path[1].x, ty: path[1].y,
-    speed: 4.5,
-    done: false,
-    targetSlot,
-    particles: [],
-    trail: []
-  };
-  gameLoop();
-}
-
-// ── 主循环 ────────────────────────────────────────────
-function gameLoop() {
-  drawGame();
-  if (!ballAnim || ballAnim.done) { animFrame = null; ballAnim = null; return; }
-
-  const b = ballAnim;
-
-  // 更新粒子
-  b.particles = b.particles.filter(p => p.life > 0);
-  b.particles.forEach(p => {
-    p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 3;
-  });
-
-  // 轨迹
-  b.trail.push({ x: b.x, y: b.y });
-  if (b.trail.length > 10) b.trail.shift();
-
-  // 移动珠子
-  const dx = b.tx - b.x, dy = b.ty - b.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  // 速度随下落深度略微加快，视觉更自然
-  const speedMult = 1 + (b.y / CH) * 0.6;
-  const spd = b.speed * speedMult;
-
-  if (dist < spd + 0.5) {
-    b.x = b.tx; b.y = b.ty;
-    const node = b.path[b.pathIdx];
-    if (node && node.pegHit) {
-      // 碰钉特效
-      spawnPegParticles(b.x, b.y, b.particles);
-      playSound('peg');
-    }
-    b.pathIdx++;
-    if (b.pathIdx >= b.path.length) {
-      b.done = true;
-      onLandAnim(b.targetSlot);
-      return;
-    }
-    const next = b.path[b.pathIdx];
-    b.tx = next.x; b.ty = next.y;
+function onLand(ball,idx){
+  if(ballLanded) return;
+  ballLanded=true;
+  const won=litSlots.has(idx)?totalBet*currentMult:0;
+  if(won>0){
+    pearls+=won;
+    const el=document.getElementById('sl'+idx);
+    if(el){el.classList.add('wf'); setTimeout(()=>{el.classList.remove('wf');},700);}
+    floats.push({x:ball.position.x,y:ball.position.y,text:'+'+won,life:100,vy:-1.2,color:'#c85000'});
   } else {
-    b.x += (dx / dist) * spd;
-    b.y += (dy / dist) * spd;
+    floats.push({x:ball.position.x,y:ball.position.y,text:'未中',life:70,vy:-1,color:'#cc3300'});
   }
-
-  animFrame = requestAnimationFrame(gameLoop);
+  updateUI();
+  setTimeout(()=>{try{World.remove(world,ball);}catch(e){}activeBalls=activeBalls.filter(b=>b!==ball);},900);
+  setTimeout(()=>showResult(won),1400);
 }
 
-function spawnPegParticles(x, y, arr) {
-  for (let i = 0; i < 6; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const spd = 1.5 + Math.random() * 2;
-    arr.push({ x, y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 1, life: 40 });
-  }
+// ── FLOW ────────────────────────────────────────────────
+function doBuy(){
+  if(pearls<COST_BASE){setTip('积分不足，请充值！');return;}
+  pearls-=COST_BASE;
+  baseBet=COST_BASE; extraBet=0; totalBet=COST_BASE;
+  ballFired=false; ballLanded=false; currentMult=0;
+  updateUI(); goPhase('step2');
 }
 
-// ── 落槽结算 ──────────────────────────────────────────
-function onLandAnim(idx) {
-  ballLanded = true;
-  // 回收槽
-  if (idx === NUM_SLOTS - 1) {
-    setTimeout(() => {
-      ballFired = false; ballLanded = false; launchState = 'waiting';
-      const fb = document.getElementById('firebtn');
-      if (fb) fb.classList.remove('off');
-      setTip('⚡ 免费再射一次！');
-      showAnnounce('再射一次！');
-    }, 500);
-    return;
-  }
-
-  const won = litSlots.has(idx) ? totalBet * currentMult : 0;
-  if (won > 0) {
-    userPearls += won; totalWins++;
-    const el = document.getElementById('sl' + idx);
-    if (el) { el.classList.add('wf'); setTimeout(() => el.classList.remove('wf'), 600); }
-    spawnWinParticles(ballAnim ? ballAnim.x : CW / 2, CH - 20, ballAnim ? ballAnim.particles : []);
-    triggerShake(5, 10);
-    triggerFlash('rgba(255,220,0,0.25)');
-    showWinBanner(won, currentMult);
-    playSound('win');
-  } else {
-    playSound('miss');
-  }
-  // 调用后端结算（失败不影响前端流程）
-  if(typeof settleBall === 'function') settleBall(idx).catch(e => console.error('结算失败', e));
-  setTimeout(() => showResult(won), 1200);
+function doConfirm(){
+  if(spinning) return;
+  document.getElementById('btn-confirm').disabled=true;
+  spinning=true;
+  let ticks=0, total=14+Math.floor(Math.random()*8);
+  const iv=setInterval(()=>{
+    const ri=Math.floor(Math.random()*5);
+    document.querySelectorAll('.ms').forEach((el,i)=>el.className='ms'+(i===ri?' spin':''));
+    ticks++;
+    if(ticks>=total){
+      clearInterval(iv);
+      let r=Math.random()*100,acc=0,chosen=0;
+      for(let i=0;i<5;i++){acc+=MULT_W[i];if(r<acc){chosen=i;break;}}
+      document.querySelectorAll('.ms').forEach((el,i)=>el.className='ms'+(i===chosen?' active':''));
+      currentMult=MULTS[chosen];
+      setLit(currentMult);
+      document.getElementById('mtv').textContent=currentMult+'x';
+      showAnnounce(currentMult+'x 倍率！');
+      spinning=false;
+      setTimeout(()=>goPhase('step3'),700);
+    }
+  },75);
 }
 
-function spawnWinParticles(x, y, arr) {
-  for (let i = 0; i < 20; i++) {
-    const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI;
-    const spd = 3 + Math.random() * 5;
-    arr.push({ x, y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd, life: 80 });
-  }
+function addOne(){
+  if(pearls<1){setTip('积分不足');return;}
+  pearls-=1; extraBet+=1; totalBet=baseBet+extraBet;
+  updateS3(); updateUI();
+}
+function addCustom(){
+  const v=parseInt(document.getElementById('jinput').value)||0;
+  if(v<=0){setTip('请输入有效积分数');return;}
+  const actual=Math.min(v,pearls);
+  if(actual<=0){setTip('积分不足');return;}
+  pearls-=actual; extraBet+=actual; totalBet=baseBet+extraBet;
+  if(actual<v) setTip('积分不足，已加注'+actual+'积分');
+  updateS3(); updateUI();
+}
+function updateS3(){
+  document.getElementById('nb').textContent=totalBet;
+  document.getElementById('nm').textContent=currentMult;
+  document.getElementById('nw').textContent=totalBet*currentMult;
+  document.getElementById('jze').textContent=extraBet;
+  document.getElementById('jzt').textContent=totalBet;
+}
+function doSkip(){
+  goPhase('step4');
+  const fb=document.getElementById('firebtn');
+  if(fb) fb.classList.remove('off');
+}
+function doGoShoot(){
+  goPhase('step4');
+  const fb=document.getElementById('firebtn');
+  if(fb) fb.classList.remove('off');
 }
 
-// ── 发射入口 ──────────────────────────────────────────
-function doLaunch() {
-  playSound('launch');
-  const { targetSlot, path } = computePath();
-  launchBallAnim(targetSlot, path);
-  ballFired = true;
-  const fb = document.getElementById('firebtn');
-  if (fb) fb.classList.add('off');
+function showResult(won){
+  totalRounds++;
+  const net=won-totalBet;
+  document.getElementById('rico').textContent=won>0?'🎉':'😔';
+  document.getElementById('rtitle').textContent=won>0?'恭喜中奖！':'本局未中奖';
+  document.getElementById('rdetail').innerHTML=
+    '赌注 <b>'+totalBet+'</b>　倍率 <b>'+currentMult+'x</b><br>'+
+    (won>0?'获得 <b class="pos">+'+won+'</b>':'未落亮槽')+
+    '　净收益 <b class="'+(net>=0?'pos':'neg')+'">'+(net>=0?'+':'')+net+'</b>';
+  updateUI(); goPhase('result');
 }
 
-// launchState/updateLaunch/entryX 兼容旧代码（发射按钮流程不变）
-// 注：launchState/entryX 已在上方声明，此处不重复
-function updateLaunch() {
-  // 新引擎：发射由doLaunch直接处理，updateLaunch留空
+function nextRound(){
+  extraBet=0; totalBet=COST_BASE; currentMult=0; ballState='waiting';
+  document.getElementById('mtv').textContent='?';
+  document.querySelectorAll('.ms').forEach(el=>el.className='ms');
+  for(let i=0;i<NUM_SLOTS;i++){const el=document.getElementById('sl'+i);if(el){el.className='slot';el.textContent='—';}}
+  litSlots.clear(); setPow(0); goPhase('step1');
 }
 
-// ── 绘制 ──────────────────────────────────────────────
-function drawGame() {
-  ctx.clearRect(0, 0, CW, CH);
-
-  // 背景渐变
-  const bg = ctx.createLinearGradient(0, 0, 0, CH);
-  bg.addColorStop(0, '#f5e6c0');
-  bg.addColorStop(1, '#e8d090');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, CW, CH);
-
-  drawPegs();
-  drawSlotDividers();
-  if (ballAnim) {
-    drawTrail();
-    drawParticles();
-    drawBall();
-  }
-  drawShake();
-}
-
-function drawPegs() {
-  const PEG_R = Math.max(4, Math.min(6, CW * 0.012));
-  pegGrid.forEach(p => {
-    // 钉子外圈高光
-    const grd = ctx.createRadialGradient(p.x - PEG_R * 0.3, p.y - PEG_R * 0.3, 0, p.x, p.y, PEG_R);
-    grd.addColorStop(0, '#ffe070');
-    grd.addColorStop(0.5, '#d4900a');
-    grd.addColorStop(1, '#8b5e00');
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, PEG_R, 0, Math.PI * 2);
-    ctx.fillStyle = grd;
-    ctx.fill();
-    // 高光点
-    ctx.beginPath();
-    ctx.arc(p.x - PEG_R * 0.3, p.y - PEG_R * 0.35, PEG_R * 0.28, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,200,0.55)';
-    ctx.fill();
+// ── PHASE ────────────────────────────────────────────────
+function goPhase(p){
+  phase=p;
+  ['s1','s2','s3','s4','s5'].forEach(id=>document.getElementById(id).style.display='none');
+  const order=['step1','step2','step3','step4','result'];
+  const idx=order.indexOf(p);
+  ['stp1','stp2','stp3','stp4'].forEach((id,i)=>{
+    document.getElementById(id).className='stp'+(i===idx?' cur':i<idx?' done':'');
   });
+  const fb=document.getElementById('firebtn');
+  if(p==='step1'){document.getElementById('s1').style.display='block'; fb.classList.add('off');}
+  else if(p==='step2'){document.getElementById('s2').style.display='block'; document.getElementById('btn-confirm').disabled=false; fb.classList.add('off');}
+  else if(p==='step3'){document.getElementById('s3').style.display='block'; updateS3(); fb.classList.add('off');}
+  else if(p==='step4'){
+    document.getElementById('s4').style.display='block';
+    const cm={2:5,4:4,6:3,8:2,10:1};
+    document.getElementById('s4b').textContent=totalBet+' 积分';
+    document.getElementById('s4m').textContent=currentMult+'x';
+    document.getElementById('s4w').textContent=(totalBet*currentMult)+' 积分';
+    document.getElementById('s4l').textContent=(cm[currentMult]||'?')+' / '+NUM_SLOTS;
+    fb.classList.remove('off');
+    ballState='waiting';
+  }
+  else if(p==='result'){document.getElementById('s5').style.display='block'; fb.classList.add('off');}
+  updateUI();
 }
 
-function drawSlotDividers() {
-  const slotW = CW / NUM_SLOTS;
-  ctx.fillStyle = 'rgba(160,100,0,0.5)';
-  for (let i = 1; i < NUM_SLOTS; i++) {
-    ctx.fillRect(i * slotW - 1, CH - 24, 2, 24);
+// ── FIRE BUTTON ──────────────────────────────────────────
+const firebtn=document.getElementById('firebtn');
+let pressStart=0;
+let risingBall=null;  // kinematic rising ball (not physics yet)
+// launch vars now in new state machine
+
+function startPress(e){
+  e.preventDefault();
+  if(phase!=='step4'){setTip('请先完成前面步骤');return;}
+  if(ballFired){setTip('本局已发射');return;}
+  pressing=true; power=0; setPow(0); pressStart=Date.now();
+  firebtn.classList.add('pressing');
+  pressTimer=setInterval(()=>setPow(Math.min(100,(Date.now()-pressStart)/1000*80)),25);
+}
+
+function endPress(e){
+  if(e) e.preventDefault();
+  if(!pressing) return;
+  pressing=false; clearInterval(pressTimer);
+  firebtn.classList.remove('pressing');
+  if(power>2){
+    ballFired=true;
+    firebtn.classList.add('off');
+    startLaunch();
+  }
+  setTimeout(()=>setPow(0),300);
+}
+
+firebtn.addEventListener('mousedown',startPress);
+firebtn.addEventListener('touchstart',startPress,{passive:false});
+firebtn.addEventListener('mouseup',endPress);
+firebtn.addEventListener('touchend',endPress,{passive:false});
+document.addEventListener('mouseup',()=>{if(pressing)endPress(null);});
+document.addEventListener('touchend',()=>{if(pressing)endPress(null);});
+
+function setPow(p){
+  power=Math.max(0,Math.min(100,p));
+  document.getElementById('pfill').style.height=power+'%';
+  document.getElementById('pval').textContent=Math.round(power)+'%';
+}
+
+// ── LAUNCH SEQUENCE ──────────────────────────────────────
+// Phase 1: ball rises along right track (kinematic, no physics)
+// Phase 2: ball enters from top-right, physics takes over
+
+function startLaunch(){
+  ballState='rising';
+  // 起点：右侧轨道底部
+  ballDrawX = CW - 8;
+  ballDrawY = CH * 0.86;
+  // 上升速度
+  riseSpeed = 3.5 + power * 0.025;
+  // 入场点：顶部，力度越大越偏左
+  entryX = CW * (0.88 - (power/100)*0.55);
+  entryY = CH * 0.04;
+}
+
+
+
+function updateLaunch(){
+  if(ballState==='rising'){
+    ballDrawY -= riseSpeed;
+    ballDrawX = CW-8;
+    // Reached top — start quarter-circle arc
+    if(ballDrawY <= CH*0.06){
+      ballState='arcing';
+      arcProgress=0;
+      // Quarter circle: center at (CW-8, CH*0.06)
+      // radius = half tube width ≈ enough to swing 90° from up→left
+      arcRadius = CW*0.07 + power*0.3;   // bigger power = bigger arc radius = enters more to the left
+      arcCenterX = ballDrawX - arcRadius; // center is to the left of track
+      arcCenterY = ballDrawY;             // center at same height as top of rise
+      arcStartAngle = 0;                  // 0 = right (3 o'clock)
+      arcEndAngle = -Math.PI/2;           // -90° = up... we go from right→up→left
+      // actually: ball comes from below (angle=90° from center = down from center)
+      // center is LEFT of ball, so ball is at angle=0 (east)
+      // we sweep counter-clockwise (negative) to angle=90 (north from center = top)
+      // then the exit is at angle=90 from center pointing LEFT = (cx-r, cy) wait...
+      // Let's think: center=(cx,cy), ball starts at (cx+r, cy) = track X
+      // sweep from 0 to -PI/2 (CCW) ends at (cx, cy-r) = top
+      // That puts ball at top going left — perfect
+      arcDuration=18;
+    }
+  } else if(ballState==='arcing'){
+    arcProgress += 1/arcDuration;
+    if(arcProgress>=1) arcProgress=1;
+    const angle = arcStartAngle + (arcEndAngle - arcStartAngle)*arcProgress;
+    ballDrawX = arcCenterX + arcRadius*Math.cos(angle);
+    ballDrawY = arcCenterY + arcRadius*Math.sin(angle);
+    if(arcProgress>=1){
+      // Arc done — now go straight LEFT along the top
+      ballState='straight';
+      straightProgress=0;
+      straightY=ballDrawY;
+      straightStartX=ballDrawX;
+      // Straight line ends at entry point X
+      straightEndX=entryX;
+      const dist=Math.abs(straightStartX-straightEndX);
+      // Speed same as rise speed so it feels continuous
+      straightDuration=Math.max(10, Math.round(dist/riseSpeed));
+    }
+  } else if(ballState==='straight'){
+    straightProgress += 1/straightDuration;
+    if(straightProgress>=1) straightProgress=1;
+    ballDrawX = straightStartX + (straightEndX-straightStartX)*straightProgress;
+    ballDrawY = straightY;
+    if(straightProgress>=1){
+      ballState='entered';
+      spawnPhysicsBall(ballDrawX, ballDrawY+4);
+    }
   }
 }
 
-function drawTrail() {
-  if (!ballAnim || ballAnim.trail.length < 2) return;
-  const t = ballAnim.trail;
-  for (let i = 1; i < t.length; i++) {
-    const alpha = (i / t.length) * 0.35;
-    const r = BALL_R * (i / t.length) * 0.7;
-    ctx.beginPath();
-    ctx.arc(t[i].x, t[i].y, r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(200,220,255,${alpha})`;
-    ctx.fill();
-  }
-}
-
-function drawBall() {
-  if (!ballAnim) return;
-  const { x, y } = ballAnim;
-  // 阴影
-  ctx.beginPath();
-  ctx.ellipse(x + 2, y + 3, BALL_R * 0.85, BALL_R * 0.5, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
-  ctx.fill();
-  // 珠子本体渐变
-  const grd = ctx.createRadialGradient(x - BALL_R * 0.35, y - BALL_R * 0.35, 0, x, y, BALL_R);
-  grd.addColorStop(0, '#ffffff');
-  grd.addColorStop(0.3, '#d0e8ff');
-  grd.addColorStop(0.7, '#7ab0e0');
-  grd.addColorStop(1, '#3060a0');
-  ctx.beginPath();
-  ctx.arc(x, y, BALL_R, 0, Math.PI * 2);
-  ctx.fillStyle = grd;
-  ctx.fill();
-  // 高光
-  ctx.beginPath();
-  ctx.arc(x - BALL_R * 0.3, y - BALL_R * 0.3, BALL_R * 0.25, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.fill();
-}
-
-function drawParticles() {
-  if (!ballAnim) return;
-  ballAnim.particles.forEach(p => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,210,80,${p.life / 40})`;
-    ctx.fill();
+function spawnPhysicsBall(x,y){
+  const BR=Math.max(6,Math.min(8,CW*0.022));
+  const ball=Bodies.circle(x,y,BR,{
+    restitution:0.40,friction:0.02,frictionAir:0.010,
+    label:'ball',_done:false,_rising:false,
+    collisionFilter:{category:1,mask:6},density:0.003
   });
+  // Initial velocity: slight leftward + downward
+  const vx=-0.4-(power/100)*1.2;
+  Body.setVelocity(ball,{x:vx,y:0.8});
+  World.add(world,ball);
+  activeBalls.push(ball);
 }
 
-// 震动/闪光效果（兼容原有）
-let _shakeFrames = 0, _shakeAmp = 0;
-function triggerShake(amp, frames) { _shakeAmp = amp; _shakeFrames = frames; }
-function drawShake() {
-  if (_shakeFrames > 0) {
-    _shakeFrames--;
+// ── GAME LOOP ────────────────────────────────────────────
+function loop(){
+  updateLaunch();
+  Engine.update(engine,16.67);
+  activeBalls.forEach(b=>{
+    if((b.position.y>CH+60||b.position.x<-80||b.position.x>CW+80)&&!b._done){
+      b._done=true;
+      try{World.remove(world,b);}catch(e){}
+      activeBalls=activeBalls.filter(x=>x!==b);
+      if(!ballLanded){ballLanded=true;setTimeout(()=>showResult(0),400);}
+    }
+  });
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ── DRAW ─────────────────────────────────────────────────
+function draw(){
+  ctx.clearRect(0,0,CW,CH);
+
+  // warm background
+  const bg=ctx.createLinearGradient(0,0,0,CH);
+  bg.addColorStop(0,'#fff5c0'); bg.addColorStop(1,'#ffe870');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,CW,CH);
+
+  const slotW=CW/NUM_SLOTS;
+
+  // subtle lit column hint (very light)
+  litSlots.forEach(i=>{
+    ctx.fillStyle='rgba(255,80,0,0.05)';
+    ctx.fillRect(i*slotW,0,slotW,CH-SLOT_H);
+  });
+
+  // pegs - mushroom style
+  pegPos.forEach(p=>{
+    const r=p.r;
+    // shadow
+    ctx.beginPath(); ctx.arc(p.x+1,p.y+1.5,r,0,Math.PI*2);
+    ctx.fillStyle='rgba(160,90,0,0.18)'; ctx.fill();
+    // cap gradient
+    const pg=ctx.createRadialGradient(p.x-r*0.3,p.y-r*0.4,r*0.1,p.x,p.y,r);
+    pg.addColorStop(0,'#ffe060'); pg.addColorStop(0.55,'#e8a010'); pg.addColorStop(1,'#c07000');
+    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.fillStyle=pg; ctx.fill();
+    ctx.strokeStyle='rgba(190,120,0,0.5)'; ctx.lineWidth=0.7; ctx.stroke();
+    // shine
+    ctx.beginPath(); ctx.ellipse(p.x-r*0.25,p.y-r*0.28,r*0.28,r*0.2,-0.3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,200,0.52)'; ctx.fill();
+    // stem
+    ctx.fillStyle='rgba(190,120,0,0.45)';
+    ctx.fillRect(p.x-r*0.22,p.y+r*0.75,r*0.44,r*0.55);
+  });
+
+  // slot dividers
+  for(let i=1;i<NUM_SLOTS;i++){
+    ctx.fillStyle='rgba(180,100,0,0.45)';
+    ctx.fillRect(i*slotW-1,CH-SLOT_H-8,2,10);
+  }
+
+  // track drawn by vtube CSS element
+
+  // entry point marker (top right)
+  if(phase==='step4'){
+    const ex=entryX||CW*0.6, ey=entryY||CH*0.03;
+    // show estimated entry zone when power > 0
+    if(power>2){
+      const exCur=CW*(0.95-(power/100)*0.65);
+      ctx.beginPath(); ctx.arc(exCur,CH*0.04,5,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,100,0,0.4)'; ctx.fill();
+    }
+  }
+
+  // RISING BALL (kinematic, right side track)
+  if(ballState==='rising'){
+    const BR=Math.max(6,Math.min(8,CW*0.022));
+    const bx=CW-8, by=ballDrawY||CH*0.86;
+    const pulse=0.5+0.5*Math.sin(Date.now()/120);
+    ctx.beginPath(); ctx.arc(bx,by,BR+4+pulse*2,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,140,0,'+(0.15+pulse*0.15)+')'; ctx.fill();
+    ctx.beginPath(); ctx.arc(bx+2,by+2,BR,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
+    drawBall(ctx,bx,by,BR);
+  }
+  // ARCING BALL (bezier curve transition from track top to peg entry)
+  if(ballState==='arcing'){
+    const BR=Math.max(6,Math.min(8,CW*0.022));
+    const bx=ballDrawX, by=ballDrawY;
+    // draw arc trail
     ctx.save();
-    ctx.translate((Math.random() - 0.5) * _shakeAmp, (Math.random() - 0.5) * _shakeAmp);
+    ctx.strokeStyle='rgba(255,200,100,0.35)';
+    ctx.lineWidth=BR*1.4;
+    ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(arcCenterX+arcRadius, arcCenterY);
+    // arc trail handled in new draw block
+    ctx.stroke();
+    ctx.restore();
+    // glow
+    const pulse=0.5+0.5*Math.sin(Date.now()/100);
+    ctx.beginPath(); ctx.arc(bx,by,BR+3+pulse*2,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,160,0,'+(0.2+pulse*0.2)+')'; ctx.fill();
+    ctx.beginPath(); ctx.arc(bx+2,by+2,BR,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
+    drawBall(ctx,bx,by,BR);
+  }
+
+  // WAITING BALL at bottom right
+  if(phase==='step4'&&!ballFired){
+    const BR=Math.max(6,Math.min(8,CW*0.022));
+    const bx=CW-8, by=CH*0.86;
+    const pulse=0.5+0.5*Math.sin(Date.now()/280);
+    ctx.beginPath(); ctx.arc(bx,by,BR+5+pulse*3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,150,0,'+(0.2+pulse*0.2)+')'; ctx.fill();
+    ctx.beginPath(); ctx.arc(bx+2,by+2,BR,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
+    drawBall(ctx,bx,by,BR);
+  }
+
+  // PHYSICS BALLS
+  const BR=Math.max(6,Math.min(8,CW*0.022));
+  activeBalls.forEach(b=>{
+    const p=b.position;
+    ctx.beginPath(); ctx.arc(p.x+2,p.y+2.5,BR,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
+    drawBall(ctx,p.x,p.y,BR);
+  });
+
+  // floats
+  for(let i=floats.length-1;i>=0;i--){
+    const f=floats[i]; f.y+=f.vy; f.life--;
+    if(f.life<=0){floats.splice(i,1);continue;}
+    ctx.globalAlpha=Math.min(1,f.life/55);
+    ctx.font='bold 16px sans-serif'; ctx.textAlign='center';
+    ctx.strokeStyle='rgba(255,230,150,0.8)'; ctx.lineWidth=3;
+    ctx.strokeText(f.text,f.x,f.y);
+    ctx.fillStyle=f.color; ctx.fillText(f.text,f.x,f.y);
+    ctx.globalAlpha=1;
   }
 }
-let _flashAlpha = 0, _flashColor = '';
-function triggerFlash(color) { _flashColor = color; _flashAlpha = 1; }
 
-// ── 初始化 ────────────────────────────────────────────
-function buildWorld() {
-  buildPegGrid();
-  buildSlotUI();
-  if (currentMult) setLit(currentMult);
-  if (ctx) drawGame(); // 初始渲染钉板
+function drawBall(ctx,x,y,r){
+  const g=ctx.createRadialGradient(x-r*0.35,y-r*0.35,r*0.05,x,y,r);
+  g.addColorStop(0,'#ffffff');
+  g.addColorStop(0.3,'#f0f0ff');
+  g.addColorStop(0.7,'#c0c0d8');
+  g.addColorStop(1,'#9090b0');
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(160,160,200,0.45)'; ctx.lineWidth=0.8; ctx.stroke();
 }
 
-// 兼容旧粒子接口
-function spawnParticles(x, y, type) {
-  if (!ballAnim) return;
-  if (type === 'win') spawnWinParticles(x, y, ballAnim.particles);
-  else spawnPegParticles(x, y, ballAnim.particles);
-}
+// ── HELPERS ──────────────────────────────────────────────
+function openGame(){document.getElementById('overlay').classList.add('hidden');}
 
 
+// v18引擎别名兼容
+function doLaunch(){ startLaunch(); }
+function spawnBall(x,y){ spawnPhysicsBall(x,y); }
+function gameLoop(){ loop(); }
 function setTip(t){const el=document.getElementById('tip');el.textContent=t;if(t)setTimeout(()=>{if(el.textContent===t)el.textContent='';},2500);}
 function showAnnounce(txt){const el=document.getElementById('announce');el.textContent=txt;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',1500);}
 function openGame(){
@@ -2955,64 +3054,6 @@ function bindRegInputs(){
     });
   }
 }
-
-// ══════════════════════════════════════════════════════
-// 发射按钮：蓄力逻辑
-// ══════════════════════════════════════════════════════
-let pressStart = 0;
-
-function setPow(p){
-  power = Math.max(0, Math.min(100, p));
-  const fill = document.getElementById('vtube-fill');
-  const pval = document.getElementById('pval');
-  if(fill) fill.style.height = power + '%';
-  if(pval) pval.textContent = Math.round(power) + '%';
-}
-
-function startPress(e){
-  if(phase !== 'step4' || ballFired) return;
-  if(e) e.preventDefault();
-  pressing = true;
-  pressStart = Date.now();
-  setPow(0);
-  const fb = document.getElementById('firebtn');
-  if(fb) fb.classList.add('pressing');
-  playSound('charge');
-  pressTimer = setInterval(()=>{
-    const elapsed = Date.now() - pressStart;
-    setPow(Math.min(100, elapsed / 30));
-    playSound('charge');
-  }, 50);
-}
-
-function endPress(e){
-  if(!pressing) return;
-  if(e) e.preventDefault();
-  pressing = false;
-  clearInterval(pressTimer);
-  pressTimer = null;
-  const fb = document.getElementById('firebtn');
-  if(fb) fb.classList.remove('pressing');
-  if(power > 2 && phase === 'step4' && !ballFired){
-    ballFired = true;
-    if(fb) fb.classList.add('off');
-    doLaunch();
-  }
-  setPow(0);
-}
-
-// 绑定发射按钮事件
-document.addEventListener('DOMContentLoaded', ()=>{
-  const fb = document.getElementById('firebtn');
-  if(fb){
-    fb.addEventListener('mousedown',  startPress);
-    fb.addEventListener('touchstart', startPress, {passive:false});
-    fb.addEventListener('mouseup',    endPress);
-    fb.addEventListener('touchend',   endPress,   {passive:false});
-  }
-  document.addEventListener('mouseup',  ()=>{ if(pressing) endPress(null); });
-  document.addEventListener('touchend', ()=>{ if(pressing) endPress(null); });
-});
 
 buildSlotUI(); goPhase('step1'); syncPoints(); renderGoods2();
 
