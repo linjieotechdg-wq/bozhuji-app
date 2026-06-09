@@ -1905,44 +1905,28 @@ async function doSpin(){
   if(pts<bet){showAnn('积分不足！');return;}
   spinning=true;setSpin(false);
 
-  // 先调后端：扣积分+算结果（后端权威）
-  let serverResult=null;
-  try{
-    const res = await api.post('/api/game/slots',{bet});
-    if(res && res.code===200){
-      serverResult = res.data; // {result:['🍒','🍒','🍒'...], win_amount, points_after}
-      pts = res.data.points_after - (res.data.win_amount||0); // 扣注后积分
-    } else if(res && res.code===400){
-      gToast(res.msg||'积分不足'); spinning=false; setSpin(true); return;
-    }
-  }catch(e){ console.warn('后端连接失败，本地结算',e); }
-
-  // 后端成功则用后端结果，否则本地计算
-  let results;
-  if(serverResult && serverResult.result){
-    // 把后端返回的符号数组转为索引
-    results = serverResult.result.map(s=> SYMS.findIndex(sym=>sym.s===s||sym.n===s));
-    results = results.map(i=>i<0?wRand():i);
-    // 用后端积分（已含奖励）
-    pts = serverResult.points_after;
-  } else {
-    // 后端失败：本地计算
-    pts -= bet;
-    results = Array.from({length:9},()=>wRand());
-  }
+  // 乐观更新：先扣积分让动画立即开始，后台异步同步数据库
+  pts -= bet;
   updUI(0);
 
-  const laps=18+Math.floor(Math.random()*16);
+  // 本地算结果（立即，不等后端）
+  const results = Array.from({length:9},()=>wRand());
+  const laps = 18+Math.floor(Math.random()*16);
+
+  // 后台异步调用后端（不阻塞动画）
+  api.post('/api/game/slots',{bet}).then(res=>{
+    if(res && res.code===200){
+      // 用后端权威积分静默修正
+      pts = res.data.points_after;
+      userPearls = pts;
+      updUI(0);
+    }
+  }).catch(e=>console.warn('结算同步失败(不影响游戏)',e));
 
   startRing(laps,async(finalPos)=>{
     await spinInner(results);
-    // 以后端结果为准，本地calcWin仅用于特效判断
-    const{total:localWon,hits,isJP}=calcWin(results,bet);
-    const won = serverResult ? (serverResult.win_amount||0) : localWon;
-    if(serverResult) pts = serverResult.points_after;
-    else if(won>0) pts += won;
-    const{hits:hitCells}=calcWin(results,bet);
-
+    const{total:won,hits:hitCells,isJP}=calcWin(results,bet);
+    if(won>0){ pts+=won; userPearls=pts; }
     if(won>0){
       totalWin+=won;
       updUI(won);
