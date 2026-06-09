@@ -3265,6 +3265,10 @@ setTimeout(()=>{
   resize();
   // gameLoop removed
   checkAuth(); // 检查登录状态
+  // 每9分钟ping后端防止Render休眠
+  const _API = (typeof API_BASE!=='undefined') ? API_BASE : 'https://bozhuji-backend.onrender.com';
+  setInterval(()=>{ fetch(_API+'/health').catch(()=>{}); }, 9*60*1000);
+  fetch(_API+'/health').catch(()=>{}); // 立即唤醒
 },150);
 </script>
 </body>
