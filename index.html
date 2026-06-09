@@ -620,6 +620,10 @@ body{background:#1a0005;font-family:Arial,sans-serif;overflow:hidden;height:100v
     <!-- ── 游戏 Tab ── -->
     <div class="tab-view active" id="game-view" data-tab="game">
       <!-- ══ 老虎机顶部信息栏 ══ -->
+  <!-- 隐藏元素供syncPoints使用 -->
+  <span id="sd" style="display:none"></span>
+  <span id="pd" style="display:none"></span>
+  <span id="cfg-cost-show" style="display:none">5</span>
   <!-- 顶部JP -->
   <div id="top-bar">
     <div class="jp-panel">
@@ -1372,8 +1376,8 @@ async function submitOrder2() {
 let userPearls = 1000;  // 全局积分，游戏和商城共用
 
 function syncPoints(){
-  document.getElementById('sd').textContent = userPearls;
-  document.getElementById('pd').textContent = userPearls;
+  const sdEl=document.getElementById('sd'); if(sdEl) sdEl.textContent = userPearls;
+  const pdEl=document.getElementById('pd'); if(pdEl) pdEl.textContent = userPearls;
   const sp=document.getElementById('shop-pts'); if(sp) sp.textContent=userPearls.toLocaleString();
   const pp=document.getElementById('prof-pts'); if(pp) pp.textContent=userPearls.toLocaleString();
   const pp2=document.getElementById('prof-pts2'); if(pp2) pp2.textContent=userPearls.toLocaleString();
@@ -2870,9 +2874,10 @@ syncPoints(); renderGoods2();
 
 window.addEventListener('resize',()=>setTimeout(resize,80));
 setTimeout(()=>{
-  initReels();
-  resize();
-  // requestAnimationFrame(gameLoop); // 老虎机不需要游戏循环
+  buildRing();
+  buildInner();
+  buildPrizeBanner();
+  updateDisplay(0);
   checkAuth(); // 检查登录状态
 },150);
 </script>
