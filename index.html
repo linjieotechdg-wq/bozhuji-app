@@ -1900,77 +1900,94 @@ function calcWin(res,b){
 }
 
 // ── 主SPIN ──────────────────────────────────────────────
-async function doSpin(){
-  if(spinning)return;
-  if(pts<bet){showAnn('积分不足！');return;}
-  spinning=true;setSpin(false);
+function doSpin(){
+  if(spinning) return;
+  if(pts < bet){ showAnn('积分不足！'); return; }
 
-  // 乐观更新：先扣积分让动画立即开始，后台异步同步数据库
+  spinning = true;
+  setSpin(false);
   pts -= bet;
   updUI(0);
 
-  // 本地算结果（立即，不等后端）
-  const results = Array.from({length:9},()=>wRand());
-  const laps = 18+Math.floor(Math.random()*16);
+  const results = Array.from({length:9}, ()=>wRand());
+  const laps    = 18 + Math.floor(Math.random()*16);
 
-  // 后台异步调用后端（不阻塞动画）
-  api.post('/api/game/slots',{bet}).then(res=>{
+  // 后台异步同步数据库（不阻塞游戏）
+  api.post('/api/game/slots', {bet}).then(res=>{
     if(res && res.code===200){
-      // 用后端权威积分静默修正
       pts = res.data.points_after;
       userPearls = pts;
       updUI(0);
     }
-  }).catch(e=>console.warn('结算同步失败(不影响游戏)',e));
+  }).catch(e=>{ /* 网络失败静默处理 */ });
 
-  startRing(laps,async(finalPos)=>{
-    await spinInner(results);
-    const{total:won,hits:hitCells,isJP}=calcWin(results,bet);
-    if(won>0){ pts+=won; userPearls=pts; }
-    if(won>0){
-      totalWin+=won;
+  // 动画结束回调
+  function onAnimDone(finalPos){
+    const {total:won, hits:hitCells, isJP} = calcWin(results, bet);
+
+    if(won > 0){
+      pts += won;
+      userPearls = pts;
+      totalWin  += won;
       updUI(won);
 
       // 中奖格高亮
       hitCells.forEach(i=>{
-        const el=document.getElementById('ic'+i);
-        if(el){ el.classList.add('cell-hit'); setTimeout(()=>el.classList.remove('cell-hit'),1800); }
+        const el = document.getElementById('ic'+i);
+        if(el){ el.classList.add('cell-hit'); setTimeout(()=>el.classList.remove('cell-hit'), 1800); }
       });
 
-      // 外圈对应格闪烁
-      const cells=[...document.querySelectorAll('.lamp-cell')];
+      // 外圈闪烁
+      const cells = [...document.querySelectorAll('.lamp-cell')];
       if(cells[finalPos]){
         cells[finalPos].classList.add('win-lit');
-        setTimeout(()=>cells[finalPos].classList.remove('win-lit'),1800);
+        setTimeout(()=>cells[finalPos].classList.remove('win-lit'), 1800);
       }
 
-      if(isJP || won>=bet*20){
-        // 大奖：强震动 + 全屏闪光 + 大量金币
+      // 特效分级
+      if(isJP || won >= bet*20){
         triggerShake(12, 500);
         triggerFlash('#ffcc00', 0.6);
         spawnCoins(20);
-        setTimeout(()=>{ showJP(won,results); }, 400);
-      } else if(won>=bet*8){
-        // 中奖：中震动 + 金色闪光
+        setTimeout(()=>showJP(won, results), 400);
+      } else if(won >= bet*8){
         triggerShake(6, 300);
         triggerFlash('#ff8800', 0.35);
         spawnCoins(10);
         showAnn('🎉 大奖！+'+won+' 积分');
       } else {
-        // 小奖：轻震动
         triggerShake(3, 150);
         showAnn(SYMS[results[4]].s+' 中奖 +'+won);
       }
       playWin();
     } else {
-      updUI(0); playMiss();
+      updUI(0);
+      playMiss();
     }
 
-    jpVal+=Math.floor(bet*0.1);
-    document.getElementById('jp-num').textContent=jpVal.toLocaleString();
-    spinning=false;setSpin(true);
-    addMyWinLog(won,results);
-    if(autoOn)autoTimer=setTimeout(doSpin,900);
+    jpVal += Math.floor(bet*0.1);
+    document.getElementById('jp-num').textContent = jpVal.toLocaleString();
+
+    addMyWinLog(won, results);
+
+    // 解锁 - 必须执行
+    spinning = false;
+    setSpin(true);
+
+    if(autoOn) autoTimer = setTimeout(doSpin, 900);
+  }
+
+  // 启动动画
+  startRing(laps, async(finalPos)=>{
+    try{
+      await spinInner(results);
+      onAnimDone(finalPos);
+    } catch(e){
+      console.error('动画出错', e);
+      // 出错也要解锁
+      spinning = false;
+      setSpin(true);
+    }
   });
 }
 
