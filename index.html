@@ -10,18 +10,26 @@
    全局 & 底部导航
 ════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{width:100%;height:100%;overflow:hidden;background:#4a2080;}
+html,body{width:100%;height:100%;overflow:hidden;
+  background:radial-gradient(ellipse at 20% 50%,#2a0050 0%,#0d0020 60%),
+             linear-gradient(135deg,#1a0035,#0a0015);}
 #root{
-  width:100%;height:100vh;max-width:420px;margin:0 auto;
+  width:100%;height:100vh;max-width:480px;margin:0 auto;
   display:flex;flex-direction:column;
   position:relative;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,180,0,0.15),
+             -4px 0 20px rgba(100,0,150,0.3),
+             4px 0 20px rgba(100,0,150,0.3);
 }
 
 /* ── 主Tab容器 ── */
 #tab-views{
-  position:fixed;top:0;left:0;right:0;bottom:54px;
+  position:fixed;
+  top:env(safe-area-inset-top,0px);
+  left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;
+  bottom:54px;
   display:flex;overflow:hidden;
-  max-width:420px;margin:0 auto;
 }
 .tab-view{
   position:absolute;inset:0;
@@ -68,7 +76,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#4a2080;}
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{width:100%;height:100%;overflow:hidden;background:#1a0030;}
+/* html,body already set above */
 
 /* ══ 整机容器 ══ */
 #machine{
@@ -418,6 +426,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a0030;}
 .log-amt.jp{color:#ff4444;} .log-amt.big{color:#ffd700;} .log-amt.sm{color:#88ff88;}
 .log-sym{font-size:12px;flex-shrink:0;}
 
+/* 商城滚动修复 */
+#shop-view{display:flex;flex-direction:column;overflow:hidden;}
+.shop-page{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
+.shop-page.active{transform:translateX(0);}
+.shop-page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .shop-navbar{background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:40;}
 .snb-back{font-size:22px;color:#333;cursor:pointer;padding:6px 8px 6px 0;}
 .snb-title{flex:1;font-size:16px;font-weight:700;color:#1a1a1a;}
@@ -431,6 +444,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a0030;}
 .shop-tabs::-webkit-scrollbar{display:none;}
 .stab{padding:11px 12px 9px;font-size:13px;color:#666;border-bottom:2px solid transparent;cursor:pointer;font-weight:500;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
 .stab.active{color:#ff6b35;border-bottom-color:#ff6b35;font-weight:700;}
+.goods-grid-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .goods-grid{padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .goods-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,0.06);cursor:pointer;transition:transform 0.12s;}
 .goods-card:active{transform:scale(0.97);}
@@ -545,7 +559,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a0030;}
 ════════════════════════════════════════ */
 #profile-view{
   font-family:'PingFang SC','Helvetica Neue',sans-serif;
-  background:#f5f5f5;overflow-y:auto;
+  background:#f5f5f5;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;
 }
 .profile-header{background:linear-gradient(135deg,#667eea,#764ba2);padding:24px 16px 28px;color:#fff;}
 .ph-user-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
@@ -910,8 +927,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a0030;}
           <div class="stab" onclick="filterGoods2('life',this)">生活</div>
           <div class="stab" onclick="filterGoods2('food',this)">美食</div>
         </div>
-        <div class="goods-grid" id="goods-grid2"></div>
-      </div>
+        <div class="goods-grid-wrap"><div class="goods-grid" id="goods-grid2"></div>
+      </div></div>
 
       <!-- 商品详情 -->
       <div class="shop-page" id="sp-detail">
@@ -1579,6 +1596,11 @@ function syncPoints(){
   const pp2=document.getElementById('prof-pts2'); if(pp2) pp2.textContent=userPearls.toLocaleString();
   const rc=document.getElementById('rc-current-pts'); if(rc) rc.textContent=userPearls.toLocaleString();
   const cs=document.getElementById('cfg-cost-show'); if(cs) cs.textContent=COST_BASE;
+  // 同步水果机积分显示
+  if(typeof pts !== 'undefined'){
+    pts = userPearls;
+    if(typeof updUI==='function') updUI(0);
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1882,21 +1904,51 @@ async function doSpin(){
   if(spinning)return;
   if(pts<bet){showAnn('积分不足！');return;}
   spinning=true;setSpin(false);
-  pts-=bet;updUI(0);
 
-  const results=Array.from({length:9},()=>wRand());
+  // 先调后端：扣积分+算结果（后端权威）
+  let serverResult=null;
+  try{
+    const res = await api.post('/api/game/slots',{bet});
+    if(res && res.code===200){
+      serverResult = res.data; // {result:['🍒','🍒','🍒'...], win_amount, points_after}
+      pts = res.data.points_after - (res.data.win_amount||0); // 扣注后积分
+    } else if(res && res.code===400){
+      gToast(res.msg||'积分不足'); spinning=false; setSpin(true); return;
+    }
+  }catch(e){ console.warn('后端连接失败，本地结算',e); }
+
+  // 后端成功则用后端结果，否则本地计算
+  let results;
+  if(serverResult && serverResult.result){
+    // 把后端返回的符号数组转为索引
+    results = serverResult.result.map(s=> SYMS.findIndex(sym=>sym.s===s||sym.n===s));
+    results = results.map(i=>i<0?wRand():i);
+    // 用后端积分（已含奖励）
+    pts = serverResult.points_after;
+  } else {
+    // 后端失败：本地计算
+    pts -= bet;
+    results = Array.from({length:9},()=>wRand());
+  }
+  updUI(0);
+
   const laps=18+Math.floor(Math.random()*16);
 
   startRing(laps,async(finalPos)=>{
     await spinInner(results);
-    const{total:won,hits,isJP}=calcWin(results,bet);
+    // 以后端结果为准，本地calcWin仅用于特效判断
+    const{total:localWon,hits,isJP}=calcWin(results,bet);
+    const won = serverResult ? (serverResult.win_amount||0) : localWon;
+    if(serverResult) pts = serverResult.points_after;
+    else if(won>0) pts += won;
+    const{hits:hitCells}=calcWin(results,bet);
 
     if(won>0){
-      pts+=won; totalWin+=won;
+      totalWin+=won;
       updUI(won);
 
       // 中奖格高亮
-      hits.forEach(i=>{
+      hitCells.forEach(i=>{
         const el=document.getElementById('ic'+i);
         if(el){ el.classList.add('cell-hit'); setTimeout(()=>el.classList.remove('cell-hit'),1800); }
       });
@@ -2237,11 +2289,68 @@ function playSound(type){
   }
 }
 
+// ── 背景音乐（Web Audio API 合成，无需外部文件）──────────────
+let bgMusicOn = false;
+let bgNodes = null;
+
+function startBGMusic(){
+  const ctx = getAudioCtx();
+  if(!ctx || bgNodes) return;
+  // 用低频振荡合成简单背景节拍
+  const notes = [130.8, 146.8, 164.8, 174.6]; // C D E F
+  let noteIdx = 0;
+  const master = ctx.createGain();
+  master.gain.value = 0.04;
+  master.connect(ctx.destination);
+  bgNodes = { master, interval: null };
+
+  function playBeat(){
+    if(!bgMusicOn){ master.disconnect(); bgNodes=null; return; }
+    const t = ctx.currentTime;
+    // 低音底鼓
+    const kick = ctx.createOscillator();
+    const kGain = ctx.createGain();
+    kick.connect(kGain); kGain.connect(master);
+    kick.type='sine'; kick.frequency.setValueAtTime(120,t);
+    kick.frequency.exponentialRampToValueAtTime(40, t+0.15);
+    kGain.gain.setValueAtTime(0.8,t);
+    kGain.gain.exponentialRampToValueAtTime(0.001,t+0.25);
+    kick.start(t); kick.stop(t+0.25);
+    // 旋律音符
+    const mel = ctx.createOscillator();
+    const mGain = ctx.createGain();
+    mel.connect(mGain); mGain.connect(master);
+    mel.type='triangle';
+    mel.frequency.value = notes[noteIdx%notes.length] * 2;
+    noteIdx++;
+    mGain.gain.setValueAtTime(0.3,t+0.05);
+    mGain.gain.exponentialRampToValueAtTime(0.001,t+0.4);
+    mel.start(t+0.05); mel.stop(t+0.45);
+  }
+  bgNodes.interval = setInterval(playBeat, 500);
+  playBeat();
+}
+
+function stopBGMusic(){
+  if(bgNodes){
+    clearInterval(bgNodes.interval);
+    try{ bgNodes.master.disconnect(); }catch(e){}
+    bgNodes = null;
+  }
+}
+
 function toggleSound(){
-  soundEnabled=!soundEnabled;
-  const btn=document.getElementById('sound-btn');
-  if(btn) btn.textContent=soundEnabled?'🔊':'🔇';
-  gToast(soundEnabled?'音效已开启':'音效已关闭');
+  soundEnabled = !soundEnabled;
+  bgMusicOn    = soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  if(btn) btn.textContent = soundEnabled ? '🔊' : '🔇';
+  if(soundEnabled){
+    startBGMusic();
+    gToast('音效+背景音乐 已开启 🎵');
+  } else {
+    stopBGMusic();
+    gToast('音效已关闭 🔇');
+  }
 }
 
 // ══════════════════════════════════════════════════════
