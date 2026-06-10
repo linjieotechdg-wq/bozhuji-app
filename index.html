@@ -1914,62 +1914,66 @@ async function doSpin(){
   setSpin(false);
   const _bet = bet;
 
-  // ① 后端请求 和 ② 跑马灯动画 同时启动
+  // 立即扣注显示（体感流畅）
+  pts -= _bet;
+  updUI(0);
+
+  // 后端请求 和 跑马灯 同时启动
   const apiPromise = api.post('/api/game/slots/record', { bet: _bet, result: null })
     .catch(e => { console.warn('后端失败', e); return null; });
 
   const laps = 18 + Math.floor(Math.random()*16);
-
-  // 跑马灯先转（约1-2秒），期间后端也在处理
   await new Promise(resolve => startRing(laps, resolve));
 
-  // 跑马灯转完，等后端结果（如果还没回来，最多再等2秒）
+  // 等后端（跑马灯期间通常已返回，最多再等2秒）
   const serverRes = await Promise.race([
     apiPromise,
     new Promise(resolve => setTimeout(() => resolve(null), 2000))
   ]);
 
-  // 确定结果
+  // 确定滚轮结果
   let results;
   if(serverRes && serverRes.code === 200 && Array.isArray(serverRes.data.result)){
-    // 用后端结果
     results = serverRes.data.result.map(s=>{
       const idx = SYMS.findIndex(sym=>sym.s===s||sym.n===s);
       return idx>=0 ? idx : wRand();
     });
   } else {
-    // 后端失败，本地随机（积分不准但游戏继续）
     results = Array.from({length:9}, ()=>wRand());
   }
 
-  // 九宫格停轮动画
+  // 九宫格停轮
   try { await spinInner(results); } catch(e){ console.error(e); }
 
-  // 计算中奖（仅用于特效判断）
-  const {total:won, hits:hitCells, isJP} = calcWin(results, _bet);
-
-  // 用后端积分（权威）
+  // 中奖金额和最终积分 —— 全部用后端权威值
+  let won, finalPts;
   if(serverRes && serverRes.code === 200){
-    pts = serverRes.data.points_after;
+    won      = serverRes.data.win_amount || 0;
+    finalPts = serverRes.data.points_after;
   } else {
-    // 后端失败，本地结算
-    if(won > 0) pts += won;
-    else pts = pts; // 已扣注
+    // 后端失败，本地计算兜底
+    const local = calcWin(results, _bet);
+    won      = local.total;
+    finalPts = pts + won; // pts已扣注
   }
-  userPearls = pts;
+
+  pts        = finalPts;
+  userPearls = finalPts;
   if(won > 0) totalWin += won;
   updUI(won);
 
   // 中奖特效
   if(won > 0){
+    const {hits:hitCells, isJP} = calcWin(results, _bet);
     hitCells.forEach(i=>{
       const el=document.getElementById('ic'+i);
       if(el){el.classList.add('cell-hit');setTimeout(()=>el.classList.remove('cell-hit'),1800);}
     });
-    const cells=[...document.querySelectorAll('.lamp-cell')];
-    if(cells[laps%cells.length]){
-      cells[laps%cells.length].classList.add('win-lit');
-      setTimeout(()=>cells[laps%cells.length]?.classList.remove('win-lit'),1800);
+    const allCells=[...document.querySelectorAll('.lamp-cell')];
+    const finalRingPos = laps % (allCells.length||1);
+    if(allCells[finalRingPos]){
+      allCells[finalRingPos].classList.add('win-lit');
+      setTimeout(()=>allCells[finalRingPos]?.classList.remove('win-lit'),1800);
     }
     if(isJP||won>=_bet*20){
       triggerShake(12,500);triggerFlash('#ffcc00',0.6);
