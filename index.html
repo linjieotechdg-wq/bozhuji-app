@@ -1015,7 +1015,7 @@ html,body{width:100%;height:100%;overflow:hidden;
     <div class="tab-view" id="profile-view" data-tab="profile" style="position:relative;">
 
       <!-- 充值页面（覆盖在个人中心上） -->
-      <div id="recharge-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:10;flex-direction:column;overflow-y:auto;">
+      <div id="recharge-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:10;flex-direction:column;overflow:hidden;">
         <div style="background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:5;">
           <div onclick="hideRechargePage()" style="font-size:18px;font-weight:600;cursor:pointer;padding:8px 16px 8px 0;min-width:60px;display:flex;align-items:center;">‹ 返回</div>
           <div style="flex:1;font-size:16px;font-weight:700;color:#1a1a1a;">充值积分</div>
@@ -1070,7 +1070,7 @@ html,body{width:100%;height:100%;overflow:hidden;
       </div>
 
       <!-- 收款码页面 -->
-      <div id="payment-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:11;flex-direction:column;">
+      <div id="payment-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:11;flex-direction:column;overflow:hidden;">
         <div style="background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;">
           <div onclick="hidePaymentPage()" style="font-size:18px;font-weight:600;cursor:pointer;padding:8px 16px 8px 0;min-width:60px;display:flex;align-items:center;">‹ 返回</div>
           <div style="flex:1;font-size:16px;font-weight:700;color:#1a1a1a;">扫码付款</div>
@@ -1125,7 +1125,7 @@ html,body{width:100%;height:100%;overflow:hidden;
       </div>
 
       <!-- 充值记录页面 -->
-      <div id="recharge-records-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:12;flex-direction:column;overflow-y:auto;">
+      <div id="recharge-records-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:12;flex-direction:column;overflow:hidden;">
         <div style="background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;">
           <div onclick="hideRecordsPage()" style="font-size:18px;font-weight:600;cursor:pointer;padding:8px 16px 8px 0;min-width:60px;display:flex;align-items:center;">‹ 返回</div>
           <div style="flex:1;font-size:16px;font-weight:700;color:#1a1a1a;">充值记录</div>
@@ -1142,6 +1142,7 @@ html,body{width:100%;height:100%;overflow:hidden;
           <div style="flex:1;font-size:16px;font-weight:700;color:#1a1a1a;">邀请好友</div>
         </div>
         <!-- 邀请头部 -->
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
         <div style="background:linear-gradient(135deg,#ff6b35,#ff4500);padding:20px 16px 28px;color:#fff;flex-shrink:0;">
           <div style="text-align:center;margin-bottom:16px;">
             <div style="font-size:40px;margin-bottom:6px;">🎁</div>
@@ -1217,7 +1218,8 @@ html,body{width:100%;height:100%;overflow:hidden;
             <div style="font-size:22px;font-weight:800;color:#007aff;" id="stat-invite-today">0</div>
             <div style="font-size:10px;color:#999;margin-top:2px;">今日新增</div>
           </div>
-        </div>
+        
+        </div></div>
 
         <!-- 邀请记录 -->
         <div style="margin:10px 12px 16px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.05);">
