@@ -433,8 +433,8 @@ html,body{width:100%;height:100%;overflow:hidden;
 .shop-page{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
 .shop-page.active{transform:translateX(0);}
 .shop-page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.shop-navbar{background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:40;}
-.snb-back{font-size:22px;color:#333;cursor:pointer;padding:6px 8px 6px 0;}
+.shop-navbar{background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;}
+.snb-back{font-size:18px;color:#333;cursor:pointer;padding:8px 16px 8px 4px;min-width:60px;display:flex;align-items:center;gap:4px;font-weight:600;}
 .snb-title{flex:1;font-size:16px;font-weight:700;color:#1a1a1a;}
 .snb-action{font-size:13px;color:#ff6b35;cursor:pointer;font-weight:600;}
 /* 商城首页 */
@@ -446,7 +446,7 @@ html,body{width:100%;height:100%;overflow:hidden;
 .shop-tabs::-webkit-scrollbar{display:none;}
 .stab{padding:11px 12px 9px;font-size:13px;color:#666;border-bottom:2px solid transparent;cursor:pointer;font-weight:500;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
 .stab.active{color:#ff6b35;border-bottom-color:#ff6b35;font-weight:700;}
-.goods-grid-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.goods-grid-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;}
 .goods-grid{padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .goods-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,0.06);cursor:pointer;transition:transform 0.12s;}
 .goods-card:active{transform:scale(0.97);}
@@ -934,9 +934,10 @@ html,body{width:100%;height:100%;overflow:hidden;
 
       <!-- 商品详情 -->
       <div class="shop-page" id="sp-detail">
-        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title" id="sp-detail-title"></div></div>
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">‹ 返回</div><div class="snb-title" id="sp-detail-title"></div></div>
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;">
         <div class="detail-img" id="sp-detail-img"></div>
-        <div class="detail-body">
+        <div class="detail-body" style="flex:none;">
           <div class="db-name" id="sp-detail-name"></div>
           <div class="db-pts">🪙 <span id="sp-detail-pts"></span> 积分</div>
           <div class="db-stock" id="sp-detail-stock"></div>
@@ -944,6 +945,7 @@ html,body{width:100%;height:100%;overflow:hidden;
           <div class="db-sec-title">商品详情</div>
           <div class="db-desc-txt" id="sp-detail-desc"></div>
           <div class="db-tags" id="sp-detail-tags"></div>
+        </div>
         </div>
         <div class="detail-footer">
           <div class="df-pts-wrap"><div class="df-pts-label">兑换所需</div><div class="df-pts-val"><span id="sp-footer-pts"></span> 积分</div></div>
@@ -953,14 +955,14 @@ html,body{width:100%;height:100%;overflow:hidden;
 
       <!-- 选择地址 -->
       <div class="shop-page" id="sp-addr">
-        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title">选择收货地址</div><span class="snb-action" onclick="shopGoto('sp-add-addr')">新增</span></div>
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">‹ 返回</div><div class="snb-title">选择收货地址</div><span class="snb-action" onclick="shopGoto('sp-add-addr')">新增</span></div>
         <div class="addr-list-wrap" id="addr-list2"></div>
         <div class="addr-confirm-footer"><button class="addr-confirm-btn" id="addr-confirm-btn2" onclick="shopGoto('sp-confirm');renderConfirm2()" disabled>确认地址</button></div>
       </div>
 
       <!-- 新增地址 -->
       <div class="shop-page" id="sp-add-addr">
-        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title">新增收货地址</div></div>
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">‹ 返回</div><div class="snb-title">新增收货地址</div></div>
         <div class="addr-form-wrap">
           <div class="addr-form-card">
             <div class="afr"><span class="afr-label">收货人</span><input class="afr-input" id="new-name2" placeholder="请输入姓名"></div>
@@ -974,7 +976,7 @@ html,body{width:100%;height:100%;overflow:hidden;
 
       <!-- 确认兑换 -->
       <div class="shop-page" id="sp-confirm">
-        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title">确认兑换</div></div>
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">‹ 返回</div><div class="snb-title">确认兑换</div></div>
         <div class="confirm-wrap" id="confirm-wrap2"></div>
         <div class="confirm-footer"><button class="submit-btn" onclick="submitOrder2()">确认兑换 · <span id="submit-pts2"></span> 积分</button></div>
       </div>
@@ -996,7 +998,7 @@ html,body{width:100%;height:100%;overflow:hidden;
 
       <!-- 我的订单 -->
       <div class="shop-page" id="sp-orders">
-        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">←</div><div class="snb-title">我的订单</div></div>
+        <div class="shop-navbar"><div class="snb-back" onclick="shopBack()">‹ 返回</div><div class="snb-title">我的订单</div></div>
         <div class="order-tabs" id="order-tabs2">
           <div class="stab active" onclick="filterOrders2('all',this)">全部</div>
           <div class="stab" onclick="filterOrders2('pending',this)">待审核</div>
@@ -1021,6 +1023,7 @@ html,body{width:100%;height:100%;overflow:hidden;
           <div style="font-size:13px;color:#ff6b35;cursor:pointer;font-weight:600;" onclick="showRechargeRecords()">充值记录</div>
         </div>
         <!-- 当前积分 -->
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
         <div style="background:linear-gradient(135deg,#6a1fa0,#3d0f6e);padding:16px;margin:10px 12px;border-radius:14px;color:#fff;">
           <div style="font-size:12px;opacity:0.8;margin-bottom:4px;">当前积分余额</div>
           <div style="font-size:28px;font-weight:800;" id="rc-current-pts">1000</div>
@@ -1062,6 +1065,7 @@ html,body{width:100%;height:100%;overflow:hidden;
         <!-- 提交按钮 -->
         <div style="padding:0 12px 20px;">
           <button id="btn-next-recharge" onclick="goToPayment()" disabled style="width:100%;height:46px;border:none;border-radius:12px;background:#ddd;color:#aaa;font-size:15px;font-weight:700;cursor:default;transition:all 0.2s;">下一步：查看收款码</button>
+        </div>
         </div>
       </div>
 
@@ -1131,7 +1135,7 @@ html,body{width:100%;height:100%;overflow:hidden;
 
     
         <!-- ══ 邀请好友页面 ══ -->
-      <div id="invite-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:13;flex-direction:column;overflow-y:auto;">
+      <div id="invite-page" style="display:none;position:absolute;inset:0;background:#f5f5f5;z-index:13;flex-direction:column;overflow:hidden;">
         <!-- 顶栏 -->
         <div style="background:#fff;display:flex;align-items:center;padding:0 14px;height:50px;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:5;">
           <div style="font-size:22px;cursor:pointer;padding:6px 8px 6px 0;" onclick="hideInvitePage()" style="font-size:22px;cursor:pointer;padding:8px 12px 8px 0;min-width:44px;min-height:44px;display:flex;align-items:center;">‹ 返回</div>
@@ -1621,7 +1625,13 @@ function switchTab(tab){
   document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('bn-'+tab).classList.add('active');
   syncPoints();
-  if(tab==='shop'){ syncPoints(); renderGoods2(); }
+  if(tab==='shop'){
+    syncPoints(); renderGoods2();
+    // 切换到商城时重置到首页
+    shopPageStack.length = 0;
+    document.querySelectorAll('#shop-view .shop-page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('sp-home').classList.add('active');
+  }
   if(tab==='profile'){
     refreshPointsFromAPI(); // 切换时从后端拉最新积分
     document.getElementById('prof-rounds').textContent = totalRounds||0;
