@@ -3292,5 +3292,105 @@ setTimeout(()=>{
   fetch(_API+'/health').catch(()=>{}); // 立即唤醒
 },150);
 </script>
+
+<!-- 全局悬浮返回按钮 z-index:9998 绝对不会被遮住 -->
+<div id="global-back-btn" onclick="globalBack()" style="
+  display:none;
+  position:fixed;
+  top:0;
+  left:calc(50% - 240px);
+  width:100%;
+  max-width:480px;
+  height:50px;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  z-index:9998;
+  align-items:center;
+  padding:0 14px;
+  box-sizing:border-box;
+  cursor:pointer;
+">
+  <span style="font-size:18px;font-weight:700;color:#333;padding:8px 16px 8px 0;">‹ 返回</span>
+  <span id="global-back-title" style="font-size:16px;font-weight:700;color:#1a1a1a;"></span>
+</div>
+<script>
+var _backStack = [];
+function showGlobalBack(title, hideFn){
+  var btn = document.getElementById('global-back-btn');
+  document.getElementById('global-back-title').textContent = title||'';
+  btn._hideFn = hideFn;
+  btn.style.display = 'flex';
+}
+function hideGlobalBack(){
+  document.getElementById('global-back-btn').style.display = 'none';
+}
+function globalBack(){
+  var btn = document.getElementById('global-back-btn');
+  if(btn._hideFn) btn._hideFn();
+  hideGlobalBack();
+}
+
+// 拦截所有show函数，自动显示全局返回按钮
+var _origShowRechargePage = typeof showRechargePage!=='undefined' ? showRechargePage : null;
+var _origHideRechargePage = typeof hideRechargePage!=='undefined' ? hideRechargePage : null;
+window.addEventListener('load', function(){
+  // 充值页面
+  var origShow1 = showRechargePage;
+  showRechargePage = function(){
+    origShow1 && origShow1();
+    showGlobalBack('充值积分', hideRechargePage);
+  };
+  var origHide1 = hideRechargePage;
+  hideRechargePage = function(){
+    origHide1 && origHide1();
+    hideGlobalBack();
+  };
+  // 充值记录
+  var origShow2 = showRechargeRecords;
+  showRechargeRecords = function(){
+    origShow2 && origShow2();
+    showGlobalBack('充值记录', hideRecordsPage);
+  };
+  var origHide2 = hideRecordsPage;
+  hideRecordsPage = function(){
+    origHide2 && origHide2();
+    hideGlobalBack();
+  };
+  // 邀请页面
+  var origShow3 = showInvitePage;
+  showInvitePage = function(){
+    origShow3 && origShow3();
+    showGlobalBack('邀请好友', hideInvitePage);
+  };
+  var origHide3 = hideInvitePage;
+  hideInvitePage = function(){
+    origHide3 && origHide3();
+    hideGlobalBack();
+  };
+  // 商城子页面
+  var origShopGoto = shopGoto;
+  shopGoto = function(pid){
+    origShopGoto && origShopGoto(pid);
+    var titles = {
+      'sp-detail':'商品详情','sp-addr':'选择地址','sp-add-addr':'新增地址',
+      'sp-confirm':'确认兑换','sp-orders':'我的订单','sp-success':'兑换成功'
+    };
+    if(pid !== 'sp-home' && titles[pid]){
+      showGlobalBack(titles[pid], function(){ shopBack(); hideGlobalBack(); });
+    }
+  };
+  var origShopBack = shopBack;
+  shopBack = function(){
+    origShopBack && origShopBack();
+    // 如果还有上一级，更新标题；如果回到首页，隐藏
+    if(shopPageStack && shopPageStack.length > 0){
+      var prev = shopPageStack[shopPageStack.length-1];
+      if(prev === 'sp-home') hideGlobalBack();
+    } else {
+      hideGlobalBack();
+    }
+  };
+});
+</script>
 </body>
 </html>
