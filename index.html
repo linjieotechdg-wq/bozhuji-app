@@ -1965,15 +1965,24 @@ function doSpin(){
     addMyWinLog(won, results);
 
     // 后端记账（异步，不阻塞解锁）
+    const _ptsAfterLocal = pts; // 记录前端本地计算结果
     api.post('/api/game/slots/record',{
       bet: _bet,
       result: results.map(i=>SYMS[i].s)
     }).then(res=>{
       if(res && res.code===200){
-        // 用后端最终积分修正（权威值）
-        pts = res.data.points_after;
-        userPearls = pts;
-        updUI(0);
+        const serverPts = res.data.points_after;
+        // 只在后端积分 >= 前端积分时才更新（防止后端算错把赢的积分扣回）
+        // 允许小误差（1积分）
+        if(serverPts >= _ptsAfterLocal - 1){
+          pts = serverPts;
+          userPearls = pts;
+          updUI(0);
+        } else {
+          // 后端积分异常偏低，保留前端结果，只更新userPearls做软同步
+          console.warn('后端积分异常，保留前端结果', _ptsAfterLocal, '>', serverPts);
+          userPearls = _ptsAfterLocal;
+        }
       }
     }).catch(e=>console.warn('记账失败',e));
 
