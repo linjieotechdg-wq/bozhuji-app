@@ -1598,8 +1598,8 @@ function syncPoints(){
   const pp2=document.getElementById('prof-pts2'); if(pp2) pp2.textContent=userPearls.toLocaleString();
   const rc=document.getElementById('rc-current-pts'); if(rc) rc.textContent=userPearls.toLocaleString();
   const cs=document.getElementById('cfg-cost-show'); if(cs) cs.textContent=COST_BASE;
-  // 同步水果机积分显示
-  if(typeof pts !== 'undefined'){
+  // 同步水果机积分：只在不旋转时同步，避免覆盖游戏中的乐观更新
+  if(typeof pts !== 'undefined' && typeof spinning !== 'undefined' && !spinning){
     pts = userPearls;
     if(typeof updUI==='function') updUI(0);
   }
@@ -1915,11 +1915,21 @@ function doSpin(){
   const laps    = 18 + Math.floor(Math.random()*16);
 
   // 后台异步同步数据库（不阻塞游戏）
+  // 记录发起请求时的积分快照，用于判断是否需要修正
+  const _ptsBeforeSpin = pts;
+  const _betNow = bet;
   api.post('/api/game/slots', {bet}).then(res=>{
     if(res && res.code===200){
-      pts = res.data.points_after;
+      const serverPts = res.data.points_after;
+      // 只在差异超过合理范围（5倍押注）才强制修正，避免时序问题导致的跳变
+      if(Math.abs(pts - serverPts) > _betNow * 5){
+        console.warn('积分校正:', pts, '->', serverPts);
+        pts = serverPts;
+        userPearls = pts;
+        updUI(0);
+      }
+      // 正常情况只更新userPearls供其他模块（商城/我的）使用
       userPearls = pts;
-      updUI(0);
     }
   }).catch(e=>{ /* 网络失败静默处理 */ });
 
