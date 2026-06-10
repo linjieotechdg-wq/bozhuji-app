@@ -1909,106 +1909,81 @@ function doSpin(){
   spinning = true;
   setSpin(false);
 
-  // 乐观扣注（动画立即开始）
-  pts -= bet;
+  const _bet = bet;
+  const results = Array.from({length:9}, ()=>wRand());
+  const laps = 18 + Math.floor(Math.random()*16);
+
+  // 乐观：先扣注显示
+  pts -= _bet;
   updUI(0);
 
-  const results = Array.from({length:9}, ()=>wRand());
-  const laps    = 18 + Math.floor(Math.random()*16);
-  const _betNow = bet;
+  // 启动动画（不等后端）
+  startRing(laps, async(finalPos)=>{
+    try {
+      await spinInner(results);
+    } catch(e){ console.error('动画出错',e); }
 
-  // 并行：动画 + 后端请求同时启动
-  let serverPtsAfter = null; // 后端返回的最终积分
+    // 计算本地中奖
+    const {total:won, hits:hitCells, isJP} = calcWin(results, _bet);
 
-  const apiPromise = api.post('/api/game/slots/record', {
-    bet: _betNow,
-    result: results.map(i => SYMS[i].s)
-  }).then(res => {
-    if(res && res.code === 200){
-      serverPtsAfter = res.data.points_after;
-    }
-  }).catch(e => { console.warn('后端记账失败', e); });
-
-  // 动画结束回调
-  function onAnimDone(finalPos){
-    const {total:won, hits:hitCells, isJP} = calcWin(results, _betNow);
-
+    // 先用本地结果更新显示
     if(won > 0){
-      totalWin += won;
-      // 用后端积分（权威），后端还没回来则用本地计算
-      if(serverPtsAfter !== null){
-        pts = serverPtsAfter;
-      } else {
-        pts += won;
-      }
+      pts += won;
       userPearls = pts;
-      updUI(won);
+      totalWin += won;
+    }
+    updUI(won);
 
-      // 中奖格高亮
+    // 中奖特效
+    if(won > 0){
       hitCells.forEach(i=>{
-        const el = document.getElementById('ic'+i);
-        if(el){ el.classList.add('cell-hit'); setTimeout(()=>el.classList.remove('cell-hit'), 1800); }
+        const el=document.getElementById('ic'+i);
+        if(el){el.classList.add('cell-hit');setTimeout(()=>el.classList.remove('cell-hit'),1800);}
       });
-
-      // 外圈闪烁
-      const cells = [...document.querySelectorAll('.lamp-cell')];
+      const cells=[...document.querySelectorAll('.lamp-cell')];
       if(cells[finalPos]){
         cells[finalPos].classList.add('win-lit');
-        setTimeout(()=>cells[finalPos].classList.remove('win-lit'), 1800);
+        setTimeout(()=>cells[finalPos].classList.remove('win-lit'),1800);
       }
-
-      // 特效分级
-      if(isJP || won >= bet*20){
-        triggerShake(12, 500);
-        triggerFlash('#ffcc00', 0.6);
-        spawnCoins(20);
-        setTimeout(()=>showJP(won, results), 400);
-      } else if(won >= bet*8){
-        triggerShake(6, 300);
-        triggerFlash('#ff8800', 0.35);
-        spawnCoins(10);
-        showAnn('🎉 大奖！+'+won+' 积分');
+      if(isJP||won>=_bet*20){
+        triggerShake(12,500);triggerFlash('#ffcc00',0.6);
+        spawnCoins(20);setTimeout(()=>showJP(won,results),400);
+      } else if(won>=_bet*8){
+        triggerShake(6,300);triggerFlash('#ff8800',0.35);
+        spawnCoins(10);showAnn('🎉 大奖！+'+won+' 积分');
       } else {
-        triggerShake(3, 150);
+        triggerShake(3,150);
         showAnn(SYMS[results[4]].s+' 中奖 +'+won);
       }
       playWin();
     } else {
-      updUI(0);
       playMiss();
     }
 
-    jpVal += Math.floor(bet*0.1);
+    jpVal += Math.floor(_bet*0.1);
     document.getElementById('jp-num').textContent = jpVal.toLocaleString();
-
     addMyWinLog(won, results);
 
-    // 动画结束后，等后端结果（最多1秒），用权威积分更新
-    apiPromise.then(()=>{
-      if(serverPtsAfter !== null && serverPtsAfter !== pts){
-        pts = serverPtsAfter;
+    // 后端记账（异步，不阻塞解锁）
+    api.post('/api/game/slots/record',{
+      bet: _bet,
+      result: results.map(i=>SYMS[i].s)
+    }).then(res=>{
+      if(res && res.code===200){
+        // 用后端最终积分修正（权威值）
+        pts = res.data.points_after;
         userPearls = pts;
-        updUI(won > 0 ? won : 0);
+        updUI(0);
       }
-    }).finally(()=>{
-      spinning = false;
-      setSpin(true);
-      if(autoOn) autoTimer = setTimeout(doSpin, 900);
-    });
-  }
+    }).catch(e=>console.warn('记账失败',e));
 
-  // 启动动画
-  startRing(laps, async(finalPos)=>{
-    try{
-      await spinInner(results);
-      onAnimDone(finalPos);
-    } catch(e){
-      console.error('动画出错', e);
-      spinning = false;
-      setSpin(true);
-    }
+    // 解锁
+    spinning = false;
+    setSpin(true);
+    if(autoOn) autoTimer = setTimeout(doSpin,900);
   });
 }
+
 
 // ── UI ──────────────────────────────────────────────────
 function updUI(won){
