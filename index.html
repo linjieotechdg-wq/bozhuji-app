@@ -1908,34 +1908,25 @@ function doSpin(){
 
   spinning = true;
   setSpin(false);
+
+  // 乐观显示：先扣注，动画流畅
   pts -= bet;
   updUI(0);
 
   const results = Array.from({length:9}, ()=>wRand());
   const laps    = 18 + Math.floor(Math.random()*16);
-
-  // 后台异步同步数据库（不阻塞游戏）
-  // 记录发起请求时的积分快照，用于判断是否需要修正
-  const _ptsBeforeSpin = pts;
   const _betNow = bet;
-  api.post('/api/game/slots', {bet}).then(res=>{
-    if(res && res.code===200){
-      const serverPts = res.data.points_after;
-      // 只在差异超过合理范围（5倍押注）才强制修正，避免时序问题导致的跳变
-      if(Math.abs(pts - serverPts) > _betNow * 5){
-        console.warn('积分校正:', pts, '->', serverPts);
-        pts = serverPts;
-        userPearls = pts;
-        updUI(0);
-      }
-      // 正常情况只更新userPearls供其他模块（商城/我的）使用
-      userPearls = pts;
-    }
-  }).catch(e=>{ /* 网络失败静默处理 */ });
+
+  // 后端结算：只做记账，不影响前端显示逻辑
+  // 前端自己算中奖结果，后端只负责写数据库
+  api.post('/api/game/slots/record', {
+    bet: _betNow,
+    result: results.map(i => SYMS[i].s)
+  }).catch(e=>{ /* 静默失败，不影响游戏 */ });
 
   // 动画结束回调
   function onAnimDone(finalPos){
-    const {total:won, hits:hitCells, isJP} = calcWin(results, bet);
+    const {total:won, hits:hitCells, isJP} = calcWin(results, _betNow);
 
     if(won > 0){
       pts += won;
