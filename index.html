@@ -1909,7 +1909,7 @@ function doSpin(){
   spinning = true;
   setSpin(false);
 
-  // 乐观显示：先扣注，动画流畅
+  // 乐观扣注（动画立即开始）
   pts -= bet;
   updUI(0);
 
@@ -1917,21 +1917,31 @@ function doSpin(){
   const laps    = 18 + Math.floor(Math.random()*16);
   const _betNow = bet;
 
-  // 后端结算：只做记账，不影响前端显示逻辑
-  // 前端自己算中奖结果，后端只负责写数据库
-  api.post('/api/game/slots/record', {
+  // 并行：动画 + 后端请求同时启动
+  let serverPtsAfter = null; // 后端返回的最终积分
+
+  const apiPromise = api.post('/api/game/slots/record', {
     bet: _betNow,
     result: results.map(i => SYMS[i].s)
-  }).catch(e=>{ /* 静默失败，不影响游戏 */ });
+  }).then(res => {
+    if(res && res.code === 200){
+      serverPtsAfter = res.data.points_after;
+    }
+  }).catch(e => { console.warn('后端记账失败', e); });
 
   // 动画结束回调
   function onAnimDone(finalPos){
     const {total:won, hits:hitCells, isJP} = calcWin(results, _betNow);
 
     if(won > 0){
-      pts += won;
+      totalWin += won;
+      // 用后端积分（权威），后端还没回来则用本地计算
+      if(serverPtsAfter !== null){
+        pts = serverPtsAfter;
+      } else {
+        pts += won;
+      }
       userPearls = pts;
-      totalWin  += won;
       updUI(won);
 
       // 中奖格高亮
@@ -1973,11 +1983,18 @@ function doSpin(){
 
     addMyWinLog(won, results);
 
-    // 解锁 - 必须执行
-    spinning = false;
-    setSpin(true);
-
-    if(autoOn) autoTimer = setTimeout(doSpin, 900);
+    // 动画结束后，等后端结果（最多1秒），用权威积分更新
+    apiPromise.then(()=>{
+      if(serverPtsAfter !== null && serverPtsAfter !== pts){
+        pts = serverPtsAfter;
+        userPearls = pts;
+        updUI(won > 0 ? won : 0);
+      }
+    }).finally(()=>{
+      spinning = false;
+      setSpin(true);
+      if(autoOn) autoTimer = setTimeout(doSpin, 900);
+    });
   }
 
   // 启动动画
@@ -1987,7 +2004,6 @@ function doSpin(){
       onAnimDone(finalPos);
     } catch(e){
       console.error('动画出错', e);
-      // 出错也要解锁
       spinning = false;
       setSpin(true);
     }
