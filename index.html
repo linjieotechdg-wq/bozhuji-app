@@ -1902,95 +1902,98 @@ function calcWin(res,b){
 }
 
 // ── 主SPIN ──────────────────────────────────────────────
-function doSpin(){
+async function doSpin(){
   if(spinning) return;
   if(pts < bet){ showAnn('积分不足！'); return; }
+  if(!currentUser){ gToast('请先登录'); return; }
 
   spinning = true;
   setSpin(false);
-
   const _bet = bet;
-  const results = Array.from({length:9}, ()=>wRand());
-  const laps = 18 + Math.floor(Math.random()*16);
 
-  // 乐观：先扣注显示
+  // 乐观扣注显示
   pts -= _bet;
   updUI(0);
 
-  // 启动动画（不等后端）
-  startRing(laps, async(finalPos)=>{
-    try {
-      await spinInner(results);
-    } catch(e){ console.error('动画出错',e); }
+  // ① 后端请求 和 ② 跑马灯动画 同时启动
+  const apiPromise = api.post('/api/game/slots/record', { bet: _bet, result: null })
+    .catch(e => { console.warn('后端失败', e); return null; });
 
-    // 计算本地中奖
-    const {total:won, hits:hitCells, isJP} = calcWin(results, _bet);
+  const laps = 18 + Math.floor(Math.random()*16);
 
-    // 先用本地结果更新显示
-    if(won > 0){
-      pts += won;
-      userPearls = pts;
-      totalWin += won;
+  // 跑马灯先转（约1-2秒），期间后端也在处理
+  await new Promise(resolve => startRing(laps, resolve));
+
+  // 跑马灯转完，等后端结果（如果还没回来，最多再等2秒）
+  const serverRes = await Promise.race([
+    apiPromise,
+    new Promise(resolve => setTimeout(() => resolve(null), 2000))
+  ]);
+
+  // 确定结果
+  let results;
+  if(serverRes && serverRes.code === 200 && Array.isArray(serverRes.data.result)){
+    // 用后端结果
+    results = serverRes.data.result.map(s=>{
+      const idx = SYMS.findIndex(sym=>sym.s===s||sym.n===s);
+      return idx>=0 ? idx : wRand();
+    });
+  } else {
+    // 后端失败，本地随机（积分不准但游戏继续）
+    results = Array.from({length:9}, ()=>wRand());
+  }
+
+  // 九宫格停轮动画
+  try { await spinInner(results); } catch(e){ console.error(e); }
+
+  // 计算中奖（仅用于特效判断）
+  const {total:won, hits:hitCells, isJP} = calcWin(results, _bet);
+
+  // 用后端积分（权威）
+  if(serverRes && serverRes.code === 200){
+    pts = serverRes.data.points_after;
+  } else {
+    // 后端失败，本地结算
+    if(won > 0) pts += won;
+    else pts = pts; // 已扣注
+  }
+  userPearls = pts;
+  if(won > 0) totalWin += won;
+  updUI(won);
+
+  // 中奖特效
+  if(won > 0){
+    hitCells.forEach(i=>{
+      const el=document.getElementById('ic'+i);
+      if(el){el.classList.add('cell-hit');setTimeout(()=>el.classList.remove('cell-hit'),1800);}
+    });
+    const cells=[...document.querySelectorAll('.lamp-cell')];
+    if(cells[laps%cells.length]){
+      cells[laps%cells.length].classList.add('win-lit');
+      setTimeout(()=>cells[laps%cells.length]?.classList.remove('win-lit'),1800);
     }
-    updUI(won);
-
-    // 中奖特效
-    if(won > 0){
-      hitCells.forEach(i=>{
-        const el=document.getElementById('ic'+i);
-        if(el){el.classList.add('cell-hit');setTimeout(()=>el.classList.remove('cell-hit'),1800);}
-      });
-      const cells=[...document.querySelectorAll('.lamp-cell')];
-      if(cells[finalPos]){
-        cells[finalPos].classList.add('win-lit');
-        setTimeout(()=>cells[finalPos].classList.remove('win-lit'),1800);
-      }
-      if(isJP||won>=_bet*20){
-        triggerShake(12,500);triggerFlash('#ffcc00',0.6);
-        spawnCoins(20);setTimeout(()=>showJP(won,results),400);
-      } else if(won>=_bet*8){
-        triggerShake(6,300);triggerFlash('#ff8800',0.35);
-        spawnCoins(10);showAnn('🎉 大奖！+'+won+' 积分');
-      } else {
-        triggerShake(3,150);
-        showAnn(SYMS[results[4]].s+' 中奖 +'+won);
-      }
-      playWin();
+    if(isJP||won>=_bet*20){
+      triggerShake(12,500);triggerFlash('#ffcc00',0.6);
+      spawnCoins(20);setTimeout(()=>showJP(won,results),400);
+    } else if(won>=_bet*8){
+      triggerShake(6,300);triggerFlash('#ff8800',0.35);
+      spawnCoins(10);showAnn('🎉 大奖！+'+won+' 积分');
     } else {
-      playMiss();
+      triggerShake(3,150);
+      showAnn(SYMS[results[4]].s+' 中奖 +'+won);
     }
+    playWin();
+  } else {
+    playMiss();
+  }
 
-    jpVal += Math.floor(_bet*0.1);
-    document.getElementById('jp-num').textContent = jpVal.toLocaleString();
-    addMyWinLog(won, results);
+  jpVal += Math.floor(_bet*0.1);
+  document.getElementById('jp-num').textContent = jpVal.toLocaleString();
+  addMyWinLog(won, results);
 
-    // 后端记账（异步，不阻塞解锁）
-    const _ptsAfterLocal = pts; // 记录前端本地计算结果
-    api.post('/api/game/slots/record',{
-      bet: _bet,
-      result: results.map(i=>SYMS[i].s)
-    }).then(res=>{
-      if(res && res.code===200){
-        const serverPts = res.data.points_after;
-        // 只在后端积分 >= 前端积分时才更新（防止后端算错把赢的积分扣回）
-        // 允许小误差（1积分）
-        if(serverPts >= _ptsAfterLocal - 1){
-          pts = serverPts;
-          userPearls = pts;
-          updUI(0);
-        } else {
-          // 后端积分异常偏低，保留前端结果，只更新userPearls做软同步
-          console.warn('后端积分异常，保留前端结果', _ptsAfterLocal, '>', serverPts);
-          userPearls = _ptsAfterLocal;
-        }
-      }
-    }).catch(e=>console.warn('记账失败',e));
-
-    // 解锁
-    spinning = false;
-    setSpin(true);
-    if(autoOn) autoTimer = setTimeout(doSpin,900);
-  });
+  spinning = false;
+  setSpin(true);
+  if(autoOn) autoTimer = setTimeout(doSpin, 900);
 }
 
 
