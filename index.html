@@ -1425,7 +1425,7 @@ async function doBuy() {
   if (userPearls < COST_BASE) { setTip('积分不足，前往充值！'); return; }
 
   const res = await api.post('/api/game/start', {});
-  if (!res || res.code !== 200) { setTip(res?.msg || '开局失败'); return; }
+  if (!res || res.code !== 200) { setTip((res && res.msg) || '开局失败'); return; }
 
   userPearls  = res.data.points_after;
   baseBet     = COST_BASE; extraBet = 0; totalBet = COST_BASE;
@@ -1480,7 +1480,7 @@ async function doConfirm() {
 async function addOne() {
   if (userPearls < 1) { setTip('积分不足'); return; }
   const res = await api.post('/api/game/extra-bet', { amount: 1 });
-  if (!res || res.code !== 200) { setTip(res?.msg || '加注失败'); return; }
+  if (!res || res.code !== 200) { setTip((res && res.msg) || '加注失败'); return; }
   userPearls = res.data.points_after; extraBet += 1; totalBet = baseBet + extraBet;
   updateS3(); syncPoints();
 }
@@ -1491,7 +1491,7 @@ async function addCustom() {
   const actual = Math.min(v, userPearls);
   if (actual <= 0) { setTip('积分不足'); return; }
   const res = await api.post('/api/game/extra-bet', { amount: actual });
-  if (!res || res.code !== 200) { setTip(res?.msg || '加注失败'); return; }
+  if (!res || res.code !== 200) { setTip((res && res.msg) || '加注失败'); return; }
   userPearls = res.data.points_after; extraBet += actual; totalBet = baseBet + extraBet;
   if (actual < v) setTip('积分不足，已加注' + actual + '积分');
   updateS3(); syncPoints();
@@ -1530,7 +1530,7 @@ async function submitRecharge() {
   const res = await api.post('/api/recharge/submit', {
     amount, pay_type: currentQR, remark: document.getElementById('remark-text').textContent
   });
-  if (!res || res.code !== 200) { gToast(res?.msg || '提交失败'); return; }
+  if (!res || res.code !== 200) { gToast((res && res.msg) || '提交失败'); return; }
 
   rechargeRecords.unshift({
     id: res.data.order_id, amount, pts: res.data.points,
@@ -1566,7 +1566,7 @@ async function submitOrder2() {
     addr_region: addr.region,
     addr_detail: addr.detail
   });
-  if (!res || res.code !== 200) { gToast(res?.msg || '兑换失败'); return; }
+  if (!res || res.code !== 200) { gToast((res && res.msg) || '兑换失败'); return; }
 
   userPearls = res.data.points_after;
   syncPoints();
@@ -1830,11 +1830,11 @@ function startRing(laps,cb){
   function step(){
     cells.forEach(c=>c.classList.remove('lit'));
     ringPos=(ringPos+1)%cells.length;
-    cells[ringPos]?.classList.add('lit');
+    cells[ringPos] && cells[ringPos].classList.add('lit');
     count++;
     if(count>=total){
       // 最后停止时闪一下当前格
-      cells[ringPos]?.classList.add('lit');
+      cells[ringPos] && cells[ringPos].classList.add('lit');
       setTimeout(()=>cb&&cb(ringPos), 80);
       return;
     }
@@ -1985,7 +1985,7 @@ async function doSpin(){
     const finalRingPos = laps % (allCells.length||1);
     if(allCells[finalRingPos]){
       allCells[finalRingPos].classList.add('win-lit');
-      setTimeout(()=>allCells[finalRingPos]?.classList.remove('win-lit'),1800);
+      setTimeout(()=>(allCells[finalRingPos] && allCells[finalRingPos].classList.remove('win-lit')),1800);
     }
     if(isJP||won>=_bet*20){
       triggerShake(12,500);triggerFlash('#ffcc00',0.6);
@@ -2191,7 +2191,7 @@ function fakeWinLog(){
 // 玩家自己中奖时加日志
 function addMyWinLog(won,results){
   if(won<=0) return;
-  const sym=SYMS[results[4]]?.s||'🎰';
+  const sym=(SYMS[results[4]] ? SYMS[results[4]].s : '🎰');
   const time=nowStr();
   if(won>=bet*20){
     addLog({type:'jp',user:'我',time,action:'大奖',amount:'+'+won});
@@ -2601,11 +2601,11 @@ let shopOrders=[
   {id:'O20240115001',gid:'G003',name:'316保温杯',pts:2000,emoji:'☕',img:'',addr:'张三 138**** 广东广州天河区',time:'2024-01-15 14:05',status:'pending',express:''},
   {id:'O20240114001',gid:'G005',name:'星巴克券×3',pts:1500,emoji:'☕',img:'',addr:'张三 138**** 广东广州天河区',time:'2024-01-14 11:30',status:'shipped',express:'顺丰 SF1234567890'},
 ];
-let currentGoods2=null, selectedAddrId2=addresses.find(a=>a.isDefault)?.id||null;
+let currentGoods2=null, selectedAddrId2=(addresses.find(a=>a.isDefault) ? addresses.find(a=>a.isDefault).id : null);
 let shopPageStack=[];
 
 function shopGoto(pid){
-  shopPageStack.push(document.querySelector('#shop-view .shop-page.active')?.id||'sp-home');
+  shopPageStack.push(document.querySelector('#shop-view .shop-page.active') ? document.querySelector('#shop-view .shop-page.active').id : 'sp-home');
   document.querySelectorAll('#shop-view .shop-page').forEach(p=>p.classList.remove('active'));
   document.getElementById(pid).classList.add('active');
 }
@@ -2702,7 +2702,7 @@ function _renderAddrList2Inner(){
     selectedAddrId2=String(addresses[0].id);
   }
 }
-function selectAddr2(id){selectedAddrId2=String(id);renderAddrList2();}
+async function selectAddr2(id){selectedAddrId2=String(id);renderAddrList2();}
 
 async function saveAddr2(){
   const name=document.getElementById('new-name2').value.trim();
@@ -2911,13 +2911,13 @@ function goToPayment(){
   document.getElementById('pay-amount').textContent=amount;
   document.getElementById('pay-pts-show').textContent=pts.toLocaleString();
   document.getElementById('notice-amount').textContent=amount;
-  const uid = currentUser?.uid || '用户';
+  const uid = (currentUser && currentUser.uid) || '用户';
   document.getElementById('remark-text').textContent='充值 '+uid+' ¥'+amount;
   document.getElementById('payment-page').style.display='flex';
   // 加载收款码并显示当前选中的
   loadQRCodes().then(()=>switchQR(currentQR));
 }
-function hidePaymentPage(){
+async function hidePaymentPage(){
   document.getElementById('payment-page').style.display='none';
 }
 
@@ -2969,7 +2969,7 @@ function switchQR(type){
 
 function copyRemark(){
   const txt=document.getElementById('remark-text').textContent;
-  navigator.clipboard?.writeText(txt).catch(()=>{});
+  navigator.clipboard && navigator.clipboard.writeText(txt).catch(()=>{});
   gToast('备注已复制：'+txt);
 }
 
@@ -3021,7 +3021,7 @@ function showInvitePage(){
   if(!page) return;
   page.style.display = 'flex';
   // 读取当前用户邀请码
-  const code = currentUser?.inviteCode || 'INV1001';
+  const code = (currentUser && currentUser.inviteCode) || 'INV1001';
   document.getElementById('my-invite-code').textContent = code;
   document.getElementById('prof-invite-code').textContent = code;
   document.getElementById('invite-link').textContent = '邀请码：' + code + '（注册时填写）';
@@ -3044,7 +3044,7 @@ function loadInviteRecords(){
   inviteRecords = [];
   try{
     const users = JSON.parse(localStorage.getItem('bzm_users') || '[]');
-    const myUid = currentUser?.uid;
+    const myUid = (currentUser && currentUser.uid);
     inviteRecords = users
       .filter(u => u.invitedBy === myUid)
       .map(u => ({
@@ -3090,22 +3090,22 @@ function loadInviteRecords(){
 }
 
 function copyInviteCode(){
-  const code = currentUser?.inviteCode || 'INV1001';
-  navigator.clipboard?.writeText(code).catch(()=>{});
+  const code = (currentUser && currentUser.inviteCode) || 'INV1001';
+  navigator.clipboard && navigator.clipboard.writeText(code).catch(()=>{});
   gToast('邀请码已复制：' + code);
   playSound('btn');
 }
 
 function copyInviteLink(){
-  const code = currentUser?.inviteCode || 'INV1001';
+  const code = (currentUser && currentUser.inviteCode) || 'INV1001';
   const text = '我在玩波珠机，邀请你一起来！注册时填写我的邀请码【' + code + '】，双方都能得积分奖励～';
-  navigator.clipboard?.writeText(text).catch(()=>{});
+  navigator.clipboard && navigator.clipboard.writeText(text).catch(()=>{});
   gToast('邀请文案已复制，快发给好友！');
   playSound('btn');
 }
 
 function shareInvite(){
-  const code = currentUser?.inviteCode || 'INV1001';
+  const code = (currentUser && currentUser.inviteCode) || 'INV1001';
   // Web Share API（移动端支持）
   if(navigator.share){
     navigator.share({
@@ -3212,7 +3212,7 @@ function validateIDInput(inp){
   if(ok) ok.style.display=isValidID(inp.value)?'block':'none';
 }
 
-function setInputState(wrapId, state){
+async function setInputState(wrapId, state){
   // state: 'normal'|'error'|'ok'
   const el=document.getElementById(wrapId);
   if(!el) return;
