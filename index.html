@@ -876,10 +876,7 @@ html,body{width:100%;height:100%;overflow:hidden;
               <span class="rule-pay-sym">🍇🍇🍇</span>
               <span class="rule-pay-odds" style="color:#cc99ff;">×6</span>
             </div>
-            <div class="rule-pay-item">
-              <span class="rule-pay-sym">任意两同</span>
-              <span class="rule-pay-odds" style="color:#88ff88;">×1.5</span>
-            </div>
+            
           </div>
         </div>
 
@@ -1808,7 +1805,7 @@ function buildPaytable(){
     {s:'🍒×3',o:'×6',c:'#ff9999'},
     {s:'🍇×3',o:'×6',c:'#cc99ff'},
     {s:'🍎×3',o:'×4',c:'#ff9966'},
-    {s:'任意2同',o:'×1.5',c:'#aaa'},
+    
   ];
   el.innerHTML=list.map(p=>`<div class="pt-item"><div class="pt-syms">${p.s}</div><div class="pt-odds" style="color:${p.c}">${p.o}</div></div>`).join('');
 }
@@ -1902,12 +1899,10 @@ function calcWin(res,b){
   let total=0;const hits=new Set();
   WIN_LINES.forEach(([a,c2,c3])=>{
     const sa=res[a],sb=res[c2],sc=res[c3];
+    // 只判断三同
     if(sa===sb&&sb===sc){
       const w=SYMS[sa].pay[4];
       if(w>0){total+=w*b/5;[a,c2,c3].forEach(x=>hits.add(x));}
-    } else if(sb===sa||sb===sc){
-      const ms=sb;const w=SYMS[ms].pay[2];
-      if(w>0){total+=w*b/5;(sb===sa?[a,c2]:[c2,c3]).forEach(x=>hits.add(x));}
     }
   });
   const jpCount=res.filter(r=>SYMS[r].s==='🎰').length;
